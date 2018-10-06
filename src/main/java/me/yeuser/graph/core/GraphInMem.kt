@@ -14,6 +14,8 @@ import it.unimi.dsi.fastutil.longs.LongList
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import it.unimi.dsi.fastutil.objects.ObjectList
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.locks.ReadWriteLock
+import java.util.concurrent.locks.ReentrantReadWriteLock
 
 class GraphInMem(
     expectedNumberOfNodes: Int,
@@ -28,6 +30,7 @@ class GraphInMem(
   private val idx2node: LongList
   private val node2idx: Long2IntMap
   private val edges: Long2ShortMap
+  private val lock: ReadWriteLock
 
   init {
     assert(precision > 1) {
@@ -43,26 +46,27 @@ class GraphInMem(
     this.idx2node = LongArrayList(expectedNumberOfNodes)
     this.node2idx = Long2IntOpenHashMap(expectedNumberOfNodes)
     this.edges = Long2ShortOpenHashMap(expectedNumberOfEdges)
+    this.lock = ReentrantReadWriteLock()
   }
 
-  @Synchronized
   private fun indexNode(node: Long): Int {
+    lock.writeLock().lock()
     val idx = this.idx.getAndIncrement()
     this.idx2node.add(node)
+    lock.writeLock().unlock()
     return idx
   }
 
-  @Synchronized
-  override fun addEdge(from: Long, `to`: Long, type: String, weight: Double, biDirectional: Boolean) {
+  override fun addEdge(from: Long, to: Long, type: String, weight: Double, biDirectional: Boolean) {
     assert(weight > 0 && weight <= 1) {
       "Weight value of an edge must always be in range (0,1]."
     }
     assert(edgeTypeMap.contains(type)) {
       "Given `type` is unknown!"
     }
-
+    lock.writeLock().lock()
     val fromIdx = node2idx.computeIfAbsent(from) { this.indexNode(it) }
-    val toIdx = node2idx.computeIfAbsent(`to`) { this.indexNode(it) }
+    val toIdx = node2idx.computeIfAbsent(to) { this.indexNode(it) }
     val typeWeight = getTypeWeight(type, weight)
     val connectionTypeMap = connections[edgeTypeMap[type]!!]
 
@@ -70,6 +74,7 @@ class GraphInMem(
     if (biDirectional) {
       addEdgeInternal(toIdx, fromIdx, typeWeight, connectionTypeMap)
     }
+    lock.writeLock().unlock()
   }
 
   private fun addEdgeInternal(fromIdx: Int, toIdx: Int, typeWeight: Short,
@@ -90,6 +95,7 @@ class GraphInMem(
   }
 
   override fun getEdge(from: Long, to: Long): GraphEdge {
+    lock.readLock().lock()
     val fromIdx = node2idx.getOrDefault(from, -1)
     Preconditions.checkState(fromIdx >= 0, "Given `from` node was not found!")
     val toIdx = node2idx.getOrDefault(to, -1)
@@ -97,6 +103,7 @@ class GraphInMem(
     val fromTo = getFromTo(fromIdx, toIdx)
     Preconditions.checkState(edges.containsKey(fromTo), "Given `from->to` edge was not found!")
     val typeWeight = edges.get(fromTo)
+    lock.readLock().unlock()
     return GraphEdge(from, to, getType(typeWeight), getWeight(typeWeight))
   }
 
@@ -110,23 +117,32 @@ class GraphInMem(
 
   override fun getEdgeConnectionsOfTypeAndWeightInRange(from: Long, type: String?,
                                                         minWeight: Double, maxWeight: Double): Iterator<GraphEdge> {
+    lock.readLock().lock()
     val fromIdx = node2idx.getOrDefault(from, -1)
+    lock.readLock().unlock()
     Preconditions.checkState(fromIdx >= 0, "Given `from` node was not found!")
     Preconditions.checkState(type == null || edgeTypeMap.contains(type), "Given `type` is unknown!")
-    return connections.asSequence()
+    lock.readLock().lock()
+    val cons = connections.asSequence()
         .filterIndexed { index, _ -> type == null || edgeTypeMap[type] == index }
         .filter { con -> con.containsKey(fromIdx) }
+        .toList()
+    lock.readLock().unlock()
+    return cons.asSequence()
         .flatMap { it.get(fromIdx).asSequence() }
         .map { toIdx ->
+          lock.readLock().lock()
           val typeWeight = edges.get(getFromTo(fromIdx, toIdx))
 
           val weight = getWeight(typeWeight)
-          if (weight < minWeight || weight > maxWeight)
+          val graphEdge = if (weight < minWeight || weight > maxWeight)
             null
           else {
             val to = idx2node.getLong(toIdx)
             GraphEdge(from, to, getType(typeWeight), weight)
           }
+          lock.readLock().unlock()
+          graphEdge
         }
         .filterNotNull()
         .iterator()

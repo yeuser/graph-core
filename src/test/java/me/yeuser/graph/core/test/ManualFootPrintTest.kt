@@ -13,8 +13,8 @@ import java.util.stream.LongStream
 fun main(args: Array<String>) {
   val runtime = Runtime.getRuntime()
   // Get the Java runtime
-  val edgesCount = 1000000
-  val nodesCount = 10000
+  val edgesCount = 10_000_000
+  val nodesCount = 1_000_000
   val random = SecureRandom()
   val edgeTypes = arrayOf("A", "M", "E")
   val graph = GraphInMem(nodesCount, edgesCount, 100, *edgeTypes)
@@ -34,7 +34,7 @@ fun main(args: Array<String>) {
   var getCnt = 0
   for (i1 in 0 until nodesCount) {
     val l1 = nodes[i1]
-    val i2s = LongStream.range(0, (edgesCount - graph.getNodeCount()) / (nodesCount - i1))
+    val i2s = LongStream.range(0, (edgesCount - graph.getEdgeCount()) / (nodesCount - i1))
         .map { nodes[random.nextInt(nodesCount)] }
         .distinct()
         .filter { it != l1 }
@@ -55,7 +55,6 @@ fun main(args: Array<String>) {
     }
     time = System.currentTimeMillis() - time
     sumTimeI += time
-    printStatistics(runtime, addCnt, sumTimeI)
 
     time = System.currentTimeMillis()
     for (i in i2s.indices) {
@@ -74,8 +73,11 @@ fun main(args: Array<String>) {
     time = System.currentTimeMillis() - time
     sumTimeR += time
 
-    printStatistics(runtime, getCnt, sumTimeR)
-    printMemory(runtime)
+    if (i1 % 100_000 == 0) {
+      printStatistics(runtime, addCnt, sumTimeI, "created")
+      printStatistics(runtime, getCnt, sumTimeR, "read")
+      printMemory(runtime)
+    }
   }
 
   println("All edges were created!")
@@ -88,13 +90,15 @@ fun main(args: Array<String>) {
   // Calculate the used memory
   printMemory(runtime)
   println("Statistics: number of nodes: ${"%,d".format(graph.getNodeCount())} - number of edges: ${"%,d".format(graph.getEdgeCount())}")
+  printStatistics(runtime, addCnt, sumTimeI, "created")
+  printStatistics(runtime, getCnt, sumTimeR, "read")
 }
 
-private fun printStatistics(runtime: Runtime, addCnt: Int, sumTimeI: Long): Long {
+private fun printStatistics(runtime: Runtime, cnt: Int, sumTime: Long, action: String): Long {
   // Calculate the used memory
   val memory = runtime.totalMemory() - runtime.freeMemory()
-  println("Edges created so far: ${"%,d".format(addCnt)} took ${"%,d".format(sumTimeI)}ms in total.\t")
-  println("Avg: ${"%,.2f".format(sumTimeI.toDouble() * 1e6 / addCnt)}µs per entry!")
+  print("Edges $action so far: ${"%,d".format(cnt)} took ${"%,d".format(sumTime)}ms in total.\t")
+  println("\tAvg: ${"%,.2f".format(sumTime.toDouble() * 1e6 / cnt)}µs per entry!")
   return memory
 }
 
