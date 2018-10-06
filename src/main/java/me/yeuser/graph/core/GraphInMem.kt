@@ -46,13 +46,14 @@ class GraphInMem(
   }
 
   @Synchronized
-  private fun indexNode(`val`: Long): Int {
-    val idx = this.idx.incrementAndGet()
-    this.idx2node.add(`val`)
+  private fun indexNode(node: Long): Int {
+    val idx = this.idx.getAndIncrement()
+    this.idx2node.add(node)
     return idx
   }
 
-  override fun addEdge(from: Long, to: Long, type: String, weight: Double, biDirectional: Boolean) {
+  @Synchronized
+  override fun addEdge(from: Long, `to`: Long, type: String, weight: Double, biDirectional: Boolean) {
     assert(weight > 0 && weight <= 1) {
       "Weight value of an edge must always be in range (0,1]."
     }
@@ -61,7 +62,7 @@ class GraphInMem(
     }
 
     val fromIdx = node2idx.computeIfAbsent(from) { this.indexNode(it) }
-    val toIdx = node2idx.computeIfAbsent(to) { this.indexNode(it) }
+    val toIdx = node2idx.computeIfAbsent(`to`) { this.indexNode(it) }
     val typeWeight = getTypeWeight(type, weight)
     val connectionTypeMap = connections[edgeTypeMap[type]!!]
 
@@ -111,24 +112,21 @@ class GraphInMem(
                                                         minWeight: Double, maxWeight: Double): Iterator<GraphEdge> {
     val fromIdx = node2idx.getOrDefault(from, -1)
     Preconditions.checkState(fromIdx >= 0, "Given `from` node was not found!")
-    val nodes: Sequence<Int2ObjectMap<IntSet>>
-    nodes = if (type == null) {
-      connections.asSequence().filter { con -> con.containsKey(fromIdx) }
-    } else {
-      assert(edgeTypeMap.contains(type)) {
-        "Given `type` is unknown!"
-      }
-      sequenceOf(connections[edgeTypeMap[type]!!])
-    }
-    return nodes.flatMap { it.get(fromIdx).asSequence() }
+    Preconditions.checkState(type == null || edgeTypeMap.contains(type), "Given `type` is unknown!")
+    return connections.asSequence()
+        .filterIndexed { index, _ -> type == null || edgeTypeMap[type] == index }
+        .filter { con -> con.containsKey(fromIdx) }
+        .flatMap { it.get(fromIdx).asSequence() }
         .map { toIdx ->
-          val fromTo = getFromTo(fromIdx, toIdx!!)
-          val typeWeight = edges.get(fromTo)
+          val typeWeight = edges.get(getFromTo(fromIdx, toIdx))
+
           val weight = getWeight(typeWeight)
           if (weight < minWeight || weight > maxWeight)
             null
-          else
-            GraphEdge(from, idx2node.getLong(toIdx), getType(typeWeight), weight)
+          else {
+            val to = idx2node.getLong(toIdx)
+            GraphEdge(from, to, getType(typeWeight), weight)
+          }
         }
         .filterNotNull()
         .iterator()
