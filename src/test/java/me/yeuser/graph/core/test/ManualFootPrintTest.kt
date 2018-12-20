@@ -21,9 +21,9 @@ fun main(args: Array<String>) {
 
   println("Creating Nodes!")
   val nodes = IntStream.range(0, nodesCount)
-      .mapToLong { _ -> random.nextLong() }
-      .distinct()
-      .toArray()
+    .mapToLong { random.nextLong() }
+    .distinct()
+    .toArray()
   println("Nodes created!")
 
   println("Creating Edges!")
@@ -35,16 +35,16 @@ fun main(args: Array<String>) {
   for (i1 in 0 until nodesCount) {
     val l1 = nodes[i1]
     val i2s = LongStream.range(0, (edgesCount - graph.getEdgeCount()) / (nodesCount - i1))
-        .map { nodes[random.nextInt(nodesCount)] }
-        .distinct()
-        .filter { it != l1 }
-        .toArray()
+      .map { nodes[random.nextInt(nodesCount)] }
+      .distinct()
+      .filter { it != l1 }
+      .toArray()
     val i2sEdgeTypes = (0 until i2s.size)
-        .map { edgeTypes[random.nextInt(edgeTypes.size)] }
-        .toTypedArray()
+      .map { edgeTypes[random.nextInt(edgeTypes.size)] }
+      .toTypedArray()
     val i2sWeights = (0 until i2s.size)
-        .map { (random.nextInt(100) + 1) / 100.0 }
-        .toDoubleArray()
+      .map { (random.nextInt(100) + 1) / 100.0 }
+      .toDoubleArray()
     var time = System.currentTimeMillis()
     for (i in i2s.indices) {
       val l2 = i2s[i]
@@ -89,7 +89,11 @@ fun main(args: Array<String>) {
   Thread.yield()
   // Calculate the used memory
   printMemory(runtime)
-  println("Statistics: number of nodes: ${"%,d".format(graph.getNodeCount())} - number of edges: ${"%,d".format(graph.getEdgeCount())}")
+  println(
+    "Statistics: number of nodes: ${"%,d".format(graph.getNodeCount())} - number of edges: ${"%,d".format(
+      graph.getEdgeCount()
+    )}"
+  )
   printStatistics(runtime, addCnt, sumTimeI, "created")
   printStatistics(runtime, getCnt, sumTimeR, "read")
 }

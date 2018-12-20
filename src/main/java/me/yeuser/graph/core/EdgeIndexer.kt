@@ -11,17 +11,24 @@ import java.util.concurrent.locks.ReadWriteLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
 class EdgeIndexer(
-    expectedNumberOfEdges: Int,
-    private var precision: Int,
-    edgeTypes: Int) {
+  expectedNumberOfEdges: Int,
+  private var precision: Int,
+  edgeTypes: Int
+) : IEdgeIndexer {
 
   private val lock: ReadWriteLock = ReentrantReadWriteLock()
   private val edges: Long2ShortMap = Long2ShortOpenHashMap(expectedNumberOfEdges, 1f)
   private val byType: Array<Int2ObjectMap<IntSet>> = (1..edgeTypes)
-      .map { Int2ObjectOpenHashMap<IntSet>(4096, 1f) as Int2ObjectMap<IntSet> }
-      .toTypedArray()
+    .map { Int2ObjectOpenHashMap<IntSet>(4096, 1f) as Int2ObjectMap<IntSet> }
+    .toTypedArray()
 
-  fun addEdge(weight: Double, edgeType: Int, fromIdx: Int, toIdx: Int, biDirectional: Boolean) {
+  override fun addEdge(
+    weight: Double,
+    edgeType: Int,
+    fromIdx: Int,
+    toIdx: Int,
+    biDirectional: Boolean
+  ) {
     val typeWeight = getTypeWeight(edgeType, weight)
     val connectionTypeMap = byType[edgeType]
     addEdgeInternal(fromIdx, toIdx, typeWeight, connectionTypeMap)
@@ -30,8 +37,10 @@ class EdgeIndexer(
     }
   }
 
-  private fun addEdgeInternal(fromIdx: Int, toIdx: Int, typeWeight: Short,
-                              connectionTypeMap: Int2ObjectMap<IntSet>) {
+  private fun addEdgeInternal(
+    fromIdx: Int, toIdx: Int, typeWeight: Short,
+    connectionTypeMap: Int2ObjectMap<IntSet>
+  ) {
     lock.writeLock().lock()
     val fromTo = getFromTo(fromIdx, toIdx)
     edges[fromTo] = typeWeight
@@ -39,16 +48,16 @@ class EdgeIndexer(
     lock.writeLock().unlock()
   }
 
-  private fun getFromTo(fromIdx: Int, toIdx: Int): Long {
+  override fun getFromTo(fromIdx: Int, toIdx: Int): Long {
     return fromIdx.toLong() and 0xFFFFFFFFL shl 32 or (toIdx.toLong() and 0xFFFFFFFFL)
   }
 
-  private fun getTypeWeight(t: Int, weight: Double): Short {
+  override fun getTypeWeight(t: Int, weight: Double): Short {
     val w = Math.round(weight * precision).toInt() - 1
     return (t * precision + w).toShort()
   }
 
-  fun getEdgeTypeAndWeight(fromIdx: Int, toIdx: Int): Pair<Int, Double> {
+  override fun getEdgeTypeAndWeight(fromIdx: Int, toIdx: Int): Pair<Int, Double> {
     val fromTo = getFromTo(fromIdx, toIdx)
     lock.readLock().lock()
     Preconditions.checkState(edges.containsKey(fromTo), "Given `from->to` edge was not found!")
@@ -57,15 +66,20 @@ class EdgeIndexer(
     return Pair(getEdgeType(typeWeight), getWeight(typeWeight))
   }
 
-  private fun getEdgeType(typeWeight: Short): Int {
+  override fun getEdgeType(typeWeight: Short): Int {
     return (typeWeight.toInt() and 0xFFFF) / precision
   }
 
-  private fun getWeight(typeWeight: Short): Double {
+  override fun getWeight(typeWeight: Short): Double {
     return ((typeWeight.toInt() and 0xFFFF) % precision + 1.0) / precision
   }
 
-  fun tw(fromIdx: Int, toIdx: Int, minWeight: Double, maxWeight: Double): Pair<Int, Double>? {
+  override fun tw(
+    fromIdx: Int,
+    toIdx: Int,
+    minWeight: Double,
+    maxWeight: Double
+  ): Pair<Int, Double>? {
     val fromTo = getFromTo(fromIdx, toIdx)
     lock.readLock().lock()
     val typeWeight = edges.get(fromTo)
@@ -78,15 +92,15 @@ class EdgeIndexer(
     }
   }
 
-  fun getConnectionsByType(edgeType: Int, fromIdx: Int): List<Int2ObjectMap<IntSet>> {
+  override fun getConnectionsByType(edgeType: Int, fromIdx: Int): List<Int2ObjectMap<IntSet>> {
     lock.readLock().lock()
     val cons = byType.filterIndexed { index, _ -> edgeType < 0 || edgeType == index }
-        .filter { con -> con.containsKey(fromIdx) }
+      .filter { con -> con.containsKey(fromIdx) }
     lock.readLock().unlock()
     return cons
   }
 
-  fun getEdgeCount(): Long {
+  override fun getEdgeCount(): Long {
     lock.readLock().lock()
     val size = edges.size.toLong()
     lock.readLock().unlock()

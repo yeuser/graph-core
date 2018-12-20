@@ -37,7 +37,7 @@ repositories {
 }
 
 dependencies {
-    compile group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-jdk8', version: '0.27.0'
+    compile group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-jdk8', version: '1.1.0-alpha'
 
     compile group: 'com.google.guava', name: 'guava', version: '26.0-jre'
 //    compile group: 'com.carrotsearch', name: 'hppc', version: '0.8.1'

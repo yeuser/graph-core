@@ -18,6 +18,8 @@ interface Graph {
     return getEdgeConnectionsOfTypeAndWeightInRange(from, type, 0.0, 1.0)
   }
 
-  fun getEdgeConnectionsOfTypeAndWeightInRange(from: Long, type: String?,
-                                               minWeight: Double, maxWeight: Double): Iterator<GraphEdge>
+  fun getEdgeConnectionsOfTypeAndWeightInRange(
+    from: Long, type: String?,
+    minWeight: Double, maxWeight: Double
+  ): Iterator<GraphEdge>
 }
