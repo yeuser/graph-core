@@ -1,14 +1,10 @@
 package me.yeuser.graph.core
 
 import com.google.common.base.Preconditions
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
-import it.unimi.dsi.fastutil.ints.IntRBTreeSet
 import it.unimi.dsi.fastutil.longs.Long2ShortMap
 import it.unimi.dsi.fastutil.longs.Long2ShortOpenHashMap
 import java.util.concurrent.locks.ReadWriteLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
-import kotlin.math.max
-import kotlin.math.min
 import kotlin.math.roundToInt
 
 class EdgeIndexer<T>(
@@ -18,49 +14,7 @@ class EdgeIndexer<T>(
 ) : IEdgeIndexer<T> {
 
 
-  class VerticesMap {
-    private val lock: ReadWriteLock = ReentrantReadWriteLock()
-    private val vertices: Int2ObjectOpenHashMap<IntRBTreeSet> = Int2ObjectOpenHashMap(32 * 1024, 1f)
-    private var verticesCompact: Array<IntArray?> = emptyArray()
-    private var cw = 0
 
-    fun add(fromIdx: Int, toIdx: Int) {
-      lock.writeLock().lock()
-      vertices.computeIfAbsent(fromIdx) { IntRBTreeSet() }.add(toIdx)
-      cw++
-      if (cw > 8 * 1024) {
-        vertices.forEach { (key, value) ->
-          if (verticesCompact.size <= key) {
-            val delta = min(1024 * 1024, max(1024, key + 1 - verticesCompact.size) * 2)
-            verticesCompact = verticesCompact.copyOf(verticesCompact.size + delta)
-          }
-          when (val v = verticesCompact[key]) {
-            null -> verticesCompact[key] = value.toIntArray()
-            else -> {
-              val originalSize = v.size
-              val a = v.copyOf(originalSize + value.size)
-              value.toIntArray().copyInto(a, originalSize)
-              verticesCompact[key] = a
-            }
-          }
-
-        }
-
-        vertices.clear()
-        cw = 0
-      }
-      lock.writeLock().unlock()
-    }
-
-    fun get(fromIdx: Int): Iterable<Int>? {
-      lock.readLock().lock()
-      val rbTreeSet = listOfNotNull(
-        vertices[fromIdx].asIterable(), verticesCompact[fromIdx]?.asIterable()
-      )
-      lock.readLock().unlock()
-      return rbTreeSet.flatten()
-    }
-  }
 
   private val lock: ReadWriteLock = ReentrantReadWriteLock()
   private val edges: Long2ShortMap = Long2ShortOpenHashMap(expectedNumberOfEdges, 1f)

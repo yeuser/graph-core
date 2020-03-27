@@ -12,7 +12,7 @@ class BISTester {
   @Test
   fun testFunctionality() {
     val testSets = (1..100).map {
-      random.ints(1_000, 0, 100_000).distinct().toArray()
+      random.ints(50L + random.nextInt(700), 5, 30_000).distinct().toArray()
     }
     val allInts = mutableSetOf<Int>()
 
@@ -28,6 +28,8 @@ class BISTester {
 
       Assert.assertEquals(allInts, bigIntSet.asSequence().toHashSet())
     }
+
+    (0..4).forEach { testNumber -> assert(!bigIntSet.has(testNumber)) }
   }
 
   @Test
