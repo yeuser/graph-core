@@ -3,28 +3,23 @@ package me.yeuser.graph.core.test
 import me.yeuser.graph.core.GraphInMem
 import java.io.IOException
 import java.security.SecureRandom
-import java.util.stream.IntStream
-import java.util.stream.LongStream
+import kotlin.streams.asSequence
 
 /**
  * Manual Memory FootPrint Test
  */
 @Throws(InterruptedException::class, IOException::class)
-fun main(args: Array<String>) {
-  val runtime = Runtime.getRuntime()
+fun main() {
   // Get the Java runtime
-  val edgesCount = 10_000_000
   val nodesCount = 1_000_000
+  val edgesCount = nodesCount * 100
   val random = SecureRandom()
   val edgeTypes = arrayOf("A", "M", "E")
   val graph = GraphInMem(nodesCount, edgesCount, 100, *edgeTypes)
 
-  println("Creating Nodes!")
-  val nodes = IntStream.range(0, nodesCount)
-    .mapToLong { random.nextLong() }
-    .distinct()
-    .toArray()
-  println("Nodes created!")
+  println("Preparing Nodes..")
+  val nodes = random.longs().asSequence().distinct().take(nodesCount).toList()
+  println("Nodes prepared")
 
   println("Creating Edges!")
 
@@ -32,51 +27,46 @@ fun main(args: Array<String>) {
   var sumTimeR: Long = 0
   var addCnt = 0
   var getCnt = 0
-  for (i1 in 0 until nodesCount) {
+  for (i1 in nodes.indices) {
     val l1 = nodes[i1]
-    val i2s = LongStream.range(0, (edgesCount - graph.getEdgeCount()) / (nodesCount - i1))
-      .map { nodes[random.nextInt(nodesCount)] }
+    val l2s = random.ints(0, nodesCount)
+      .asSequence()
+      .filter { it != i1 }
       .distinct()
-      .filter { it != l1 }
-      .toArray()
-    val i2sEdgeTypes = (0 until i2s.size)
-      .map { edgeTypes[random.nextInt(edgeTypes.size)] }
-      .toTypedArray()
-    val i2sWeights = (0 until i2s.size)
-      .map { (random.nextInt(100) + 1) / 100.0 }
-      .toDoubleArray()
+      .map { nodes[it] }
+      .take(edgesCount / nodesCount)
+      .toList()
+
     var time = System.currentTimeMillis()
-    for (i in i2s.indices) {
-      val l2 = i2s[i]
-      val edgeType = i2sEdgeTypes[i]
-      val weight = i2sWeights[i]
+    l2s.forEach { l2 ->
+      val edgeType = edgeTypes[random.nextInt(edgeTypes.size)]
+      val weight = (random.nextInt(100) + 1) / 100.0
       graph.addEdge(l1, l2, edgeType, weight, false)
-      addCnt++
     }
+    addCnt += l2s.size
     time = System.currentTimeMillis() - time
     sumTimeI += time
 
     time = System.currentTimeMillis()
-    for (i in i2s.indices) {
-      val l2 = i2s[i]
-      val edgeType = i2sEdgeTypes[i]
-      val weight = i2sWeights[i]
+    l2s.forEach { l2 ->
       val edge = graph.getEdge(l1, l2)
-      getCnt++
-      assert(Math.abs(edge.weight - weight) < 0.01) {
-        edge.weight.toString() + " != " + weight
-      }
-      assert(edge.edgeType == edgeType) {
-        edge.edgeType + " != " + edgeType
-      }
+      edge.edgeType
+      edge.from
+      edge.to
+      edge.weight
     }
+    getCnt += l2s.size
     time = System.currentTimeMillis() - time
     sumTimeR += time
 
-    if (i1 % 100_000 == 0) {
-      printStatistics(runtime, addCnt, sumTimeI, "created")
-      printStatistics(runtime, getCnt, sumTimeR, "read")
-      printMemory(runtime)
+    if ((i1 + 1) % 100_000 == 0) {
+      // Run the garbage collector
+      Runtime.getRuntime().gc()
+      Thread.yield()
+      // Hoping garbage collector runs after yield
+      printStatistics(addCnt, sumTimeI, "created")
+      printStatistics(getCnt, sumTimeR, "read")
+      printMemory(graph.getNodeCount(), graph.getEdgeCount())
     }
   }
 
@@ -84,29 +74,27 @@ fun main(args: Array<String>) {
   Thread.yield()
 
   // Run the garbage collector
-  println("Going to do GC!")
-  runtime.gc()
+  Runtime.getRuntime().gc()
   Thread.yield()
-  // Calculate the used memory
-  printMemory(runtime)
-  println(
-    "Statistics: number of nodes: ${"%,d".format(graph.getNodeCount())} - number of edges: ${"%,d".format(
-      graph.getEdgeCount()
-    )}"
-  )
-  printStatistics(runtime, addCnt, sumTimeI, "created")
-  printStatistics(runtime, getCnt, sumTimeR, "read")
+
+  printStatistics(addCnt, sumTimeI, "created")
+  printStatistics(getCnt, sumTimeR, "read")
+  printMemory(graph.getNodeCount(), graph.getEdgeCount())
 }
 
-private fun printStatistics(runtime: Runtime, cnt: Int, sumTime: Long, action: String): Long {
-  // Calculate the used memory
-  val memory = runtime.totalMemory() - runtime.freeMemory()
+private fun printStatistics(cnt: Int, sumTime: Long, action: String) {
   print("Edges $action so far: ${"%,d".format(cnt)} took ${"%,d".format(sumTime)}ms in total.\t")
   println("\tAvg: ${"%,.2f".format(sumTime.toDouble() * 1e6 / cnt)}µs per entry!")
-  return memory
 }
 
-private fun printMemory(runtime: Runtime) {
-  val memory = runtime.totalMemory() - runtime.freeMemory()
-  println("Used memory: ${"%,.2f".format(memory / (1024.0 * 1024.0))}MB")
+private fun printMemory(nodes: Long, edges: Long) {
+  val memory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()
+  println(
+    """
+    Used memory: ${"%,.2f".format(memory / (1024.0 * 1024.0))}MB
+      #nodes: ${"%,d".format(nodes)} 
+      #edges: ${"%,d".format(edges)}
+      ~bytes per edge: ${"%.2f".format(memory.toDouble() / edges)}    
+    """.trimIndent()
+  )
 }

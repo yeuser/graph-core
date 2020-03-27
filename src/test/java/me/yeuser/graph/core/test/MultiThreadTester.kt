@@ -6,7 +6,7 @@ import kotlinx.coroutines.runBlocking
 import me.yeuser.graph.core.GraphInMem
 import org.junit.Test
 import java.io.IOException
-import java.util.Random
+import java.util.*
 
 class MultiThreadTester {
 
@@ -36,17 +36,14 @@ class MultiThreadTester {
         }
         edges.forEach { (fromTo, weight) ->
           graph.addEdge(
-            fromTo.first,
-            fromTo.second,
-            "A",
-            weight,
-            true
+            fromTo.first, fromTo.second, "A", weight, true
           )
         }
 
         Thread.sleep(100)
 
-        edges.forEach { (from, to), weight ->
+        edges.forEach { (fromTo, weight) ->
+          val (from, to) = fromTo
           val edge = graph.getEdge(from, to)
           assert(edge.weight == weight) { "$edge has not the weight = $weight" }
         }

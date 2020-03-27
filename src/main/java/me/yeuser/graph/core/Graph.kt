@@ -10,16 +10,17 @@ interface Graph {
 
   fun getEdge(from: Long, to: Long): GraphEdge
 
-  fun getEdgeConnections(from: Long): Iterator<GraphEdge> {
-    return getEdgeConnectionsOfType(from, null)
-  }
+  fun getEdgeConnections(from: Long): Iterator<GraphEdge> = getEdgeConnectionsOfType(from, null)
 
-  fun getEdgeConnectionsOfType(from: Long, type: String?): Iterator<GraphEdge> {
-    return getEdgeConnectionsOfTypeAndWeightInRange(from, type, 0.0, 1.0)
-  }
+  fun getEdgeConnectionsOfType(
+    from: Long, type: String?
+  ): Iterator<GraphEdge> = getEdgeConnectionsOfTypeAndWeightInRange(from, type, 0.0, 1.0)
 
   fun getEdgeConnectionsOfTypeAndWeightInRange(
-    from: Long, type: String?,
-    minWeight: Double, maxWeight: Double
+    from: Long, type: String?, minWeight: Double, maxWeight: Double
   ): Iterator<GraphEdge>
 }
+
+data class GraphEdge internal constructor(
+  val from: Long, val to: Long, val edgeType: String, val weight: Double
+)
