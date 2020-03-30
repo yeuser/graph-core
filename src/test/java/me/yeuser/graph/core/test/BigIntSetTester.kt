@@ -24,12 +24,19 @@ class BigIntSetTester {
 
       testSet.forEach { testNumber -> assert(bigIntSet.has(testNumber)) }
 
+      assert(
+        bigIntSet.findArr(testSet).all { it != null }
+      )
+
       Assert.assertEquals(allInts.size, bigIntSet.size())
 
       Assert.assertEquals(allInts, bigIntSet.asSequence().toHashSet())
     }
 
     (0..4).forEach { testNumber -> assert(!bigIntSet.has(testNumber)) }
+    assert(
+      bigIntSet.findArr((0..4).toList().toIntArray()).all { it == null }
+    )
   }
 
   @Test
