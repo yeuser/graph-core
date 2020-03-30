@@ -28,7 +28,7 @@ class BigIntSetTester {
         bigIntSet.findArr(testSet).all { it != null }
       )
 
-      Assert.assertEquals(allInts.size, bigIntSet.size())
+      Assert.assertEquals(allInts.size, bigIntSet.size)
 
       Assert.assertEquals(allInts, bigIntSet.asSequence().toHashSet())
     }
@@ -42,7 +42,7 @@ class BigIntSetTester {
   @Test
   fun testPerformance() {
 
-    val padSize = 10
+    val padSize = 9 // 7 digits + 2 commas
     val testCount = 200
     val setSize: Long = 5_000
     val upperBoundary = 100_000
@@ -54,10 +54,18 @@ class BigIntSetTester {
           setSize: $setSize
           upperBoundary: $upperBoundary
 
-      method    | ${"time (ms)".padEnd(padSize)} | ${"memory (bytes)".padEnd(padSize)}
     """.trimIndent()
     )
-
+    val titles = listOf(
+      "method".padStart(padSize),
+      "time (ms)".padEnd(padSize),
+      "memory (bytes)".padEnd(padSize),
+      "bytes per item".padEnd(padSize)
+    )
+    println(
+      titles.joinToString(" | ")
+    )
+    val pads = titles.map { it.length }
 
     repeat(5) {
       val testSets = (1..testCount).map {
@@ -73,11 +81,12 @@ class BigIntSetTester {
       memory0 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() - memory0
 
       println(
-        """
-      -NOOP-    | ${"%,d".format(time0).padStart(padSize)} | ${"%,d".format(memory0).padStart(
-          padSize
-        )}
-    """.trimIndent()
+        listOf(
+          "-NOOP-".padStart(pads[0]),
+          "%,d".format(time0).padStart(pads[1]),
+          "%,d".format(memory0).padStart(pads[2]),
+          "".padEnd(pads[3], '-')
+        ).joinToString(" | ")
       )
 
       gc()
@@ -92,11 +101,12 @@ class BigIntSetTester {
       memory1 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() - memory1
 
       println(
-        """
-      hashset   | ${"%,d".format(time1).padStart(padSize)} | ${"%,d".format(memory1).padStart(
-          padSize
-        )}
-    """.trimIndent()
+        listOf(
+          "hashset".padStart(pads[0]),
+          "%,d".format(time1).padStart(pads[1]),
+          "%,d".format(memory1).padStart(pads[2]),
+          "%,.2f".format(memory1.toFloat() / hashSet.size).padStart(pads[3])
+        ).joinToString(" | ")
       )
 
       gc()
@@ -112,11 +122,12 @@ class BigIntSetTester {
       memory2 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() - memory2
 
       println(
-        """
-      bigintset | ${"%,d".format(time2).padStart(padSize)} | ${"%,d".format(memory2).padStart(
-          padSize
-        )}
-    """.trimIndent()
+        listOf(
+          "bigintset".padStart(pads[0]),
+          "%,d".format(time2).padStart(pads[1]),
+          "%,d".format(memory2).padStart(pads[2]),
+          "%,.2f".format(memory2.toFloat() / bigIntSet.size).padStart(pads[3])
+        ).joinToString(" | ")
       )
     }
 

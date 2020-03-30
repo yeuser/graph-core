@@ -13,9 +13,6 @@ class EdgeIndexer<T>(
   private val edgeTypes: Array<T>
 ) : IEdgeIndexer<T> {
 
-
-
-
   private val lock: ReadWriteLock = ReentrantReadWriteLock()
   private val edges: Long2ShortMap = Long2ShortOpenHashMap(expectedNumberOfEdges, 1f)
   private val byType: Array<VerticesMap> =

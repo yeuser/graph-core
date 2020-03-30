@@ -1,14 +1,23 @@
 package me.yeuser.graph.core
 
-class BigIntSet {
-  private val col = mutableListOf<IntArray>()
+class BigIntSet(
+  private val blockSize: Int = 4096 * 16 // assuming 16 sets of 4k memory blocks
+) {
+
+  private val blocks = mutableListOf<IntArray>()
 
   fun addAll(arr: IntArray) {
-    val inArr = arr.toSortedSet().toIntArray()
-    val finds = findSortedArr(inArr)
-    col.add(
-      inArr.filterIndexed { i, _ -> finds[i] == null }.toIntArray().sortedArray()
-    )
+    if (blocks.isEmpty() || blocks.last().size >= blockSize) {
+      val inArr = arr.toSortedSet().toIntArray()
+      val finds = findSortedArr(inArr)
+      val toBeAdded = inArr.filterIndexed { i, _ -> finds[i] == null }.toIntArray().sortedArray()
+      blocks.add(toBeAdded)
+    } else {
+      val inArr = arr.toSortedSet().toIntArray()
+      val finds = findSortedArr(inArr)
+      val toBeAdded = inArr.filterIndexed { i, _ -> finds[i] == null }.toIntArray().sortedArray()
+      blocks[blocks.lastIndex] = (blocks.last() + toBeAdded).sortedArray()
+    }
   }
 
   fun has(k: Int): Boolean = find(k) != null
@@ -19,7 +28,7 @@ class BigIntSet {
 
   private fun findSortedArr(inArr: IntArray): Array<Pair<Int, Int>?> {
     val ret = arrayOfNulls<Pair<Int, Int>?>(inArr.size)
-    col.forEachIndexed { idx, colArr ->
+    blocks.forEachIndexed { idx, colArr ->
       var i = 0
       var j = 0
       while (i < inArr.size && j < colArr.size) {
@@ -42,7 +51,7 @@ class BigIntSet {
   }
 
   fun find(k: Int): Pair<Int, Int>? {
-    col.forEachIndexed { idx, arr ->
+    blocks.forEachIndexed { idx, arr ->
       var p = 0
       var q = arr.size - 1
       while (q - p > 7) {
@@ -61,7 +70,7 @@ class BigIntSet {
   }
 
   fun asSequence(): Sequence<Int> =
-    ArrayList(col).asSequence().flatMap { it.asSequence() }
+    ArrayList(blocks).asSequence().flatMap { it.asSequence() }
 
-  fun size(): Int = col.sumBy { it.size }
+  val size: Int get() = blocks.sumBy { it.size }
 }
