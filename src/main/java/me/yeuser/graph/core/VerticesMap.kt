@@ -30,13 +30,13 @@ class VerticesMap(
     lock.writeLock().lock()
     cOps++
     if (cOps > bufferOpsLimit) {
-      compact()
+      makeCompact()
       cOps = 0
     }
     lock.writeLock().unlock()
   }
 
-  private fun compact() {
+  private fun makeCompact() {
     vertices.forEach { (key, value) ->
       if (verticesCompact.size <= key) {
         val delta = min(

@@ -6,7 +6,7 @@ import org.junit.Test
 import java.util.*
 import kotlin.streams.asSequence
 
-class BISTester {
+class BigIntSetTester {
   val random = Random()
 
   @Test
