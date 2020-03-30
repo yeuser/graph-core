@@ -7,7 +7,7 @@ class GraphInMem(
     expectedNumberOfEdges: Int,
     precision: Int,
     vararg edgeTypes: String
-) : Graph {
+) : Graph<String> {
 
     init {
         assert(precision > 1) { "Precision must be bigger than 1." }
@@ -17,7 +17,6 @@ class GraphInMem(
     }
 
     private val edgeTypes: Array<String> = edgeTypes.distinct().toTypedArray()
-
     private val nodeIndexer: INodeIndexer = NodeIndexer(expectedNumberOfNodes)
     private val edgeIndexer: IEdgeIndexer<String> = EdgeIndexer(
         expectedNumberOfEdges, precision, this.edgeTypes
@@ -42,7 +41,7 @@ class GraphInMem(
         this.edgeIndexer.addEdge(weight, type, fromIdx, toIdx, biDirectional)
     }
 
-    override fun getEdge(from: Long, to: Long): GraphEdge {
+    override fun getEdge(from: Long, to: Long): GraphEdge<String> {
         val fromIdx = nodeIndexer.indexOf(from)
         Preconditions.checkState(fromIdx >= 0, "Given `from` node was not found!")
         val toIdx = nodeIndexer.indexOf(to)
@@ -51,32 +50,29 @@ class GraphInMem(
         return GraphEdge(from, to, type, weight)
     }
 
-    override fun getEdgeConnectionsOfTypeAndWeightInRange(
+    override fun getEdgeConnections(
         from: Long,
         type: String?,
         minWeight: Double,
         maxWeight: Double
-    ): Iterator<GraphEdge> {
+    ): Iterator<GraphEdge<String>> {
         val fromIdx = nodeIndexer.indexOf(from)
         Preconditions.checkState(fromIdx >= 0, "Given `from` node was not found!")
         Preconditions.checkState(
             type == null || edgeTypes.contains(type),
             "Given `type` is unknown!"
         )
-        return edgeIndexer.getConnectionsByType(type, fromIdx).mapNotNull { toIdx ->
-            edgeIndexer.getEdgeTypeAndWeight(fromIdx, toIdx).takeUnless { (_, weight) ->
-                weight < minWeight || weight > maxWeight
-            }?.let { (type, weight) ->
-                GraphEdge(from, nodeIndexer.fromIndex(toIdx), type, weight)
-            }
-        }.iterator()
+        return edgeIndexer.getConnectionsByType(type, fromIdx)
+            .filter { edge -> edge.weight in minWeight..maxWeight }
+            .map { GraphEdge(from, nodeIndexer.fromIndex(it.toIdx), it.type, it.weight) }
+            .iterator()
     }
 
-    override fun getNodeCount(): Long {
+    override fun getNodeCount(): Int {
         return nodeIndexer.size()
     }
 
-    override fun getEdgeCount(): Long {
+    override fun getEdgeCount(): Int {
         return this.edgeIndexer.getEdgeCount()
     }
 }

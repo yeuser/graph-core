@@ -38,7 +38,7 @@ class NodeIndexer(expectedNumberOfNodes: Int) : INodeIndexer {
         return node
     }
 
-    override fun size(): Long {
-        return idx2node.size.toLong()
+    override fun size(): Int {
+        return idx2node.size
     }
 }

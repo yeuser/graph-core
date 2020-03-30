@@ -7,17 +7,12 @@ class BigIntSet(
     private val blocks = mutableListOf<IntArray>()
 
     fun addAll(arr: IntArray) {
-        if (blocks.isEmpty() || blocks.last().size >= blockSize) {
-            val inArr = arr.toSortedSet().toIntArray()
-            val finds = findSortedArr(inArr)
-            val toBeAdded = inArr.filterIndexed { i, _ -> finds[i] == null }.toIntArray().sortedArray()
-            blocks.add(toBeAdded)
-        } else {
-            val inArr = arr.toSortedSet().toIntArray()
-            val finds = findSortedArr(inArr)
-            val toBeAdded =
-                inArr.filterIndexed { i, _ -> finds[i] == null }.toIntArray().sortedArray()
-            blocks[blocks.lastIndex] = (blocks.last() + toBeAdded).sortedArray()
+        val inArr = arr.toSortedSet().toIntArray()
+        val finds = findSortedArr(inArr)
+        val toBeAdded = inArr.filterIndexed { i, _ -> finds[i] == null }.toIntArray().sortedArray()
+        when {
+            blocks.isEmpty() || blocks.last().size >= blockSize -> blocks.add(toBeAdded)
+            else -> blocks[blocks.lastIndex] = (blocks.last() + toBeAdded).sortedArray()
         }
     }
 

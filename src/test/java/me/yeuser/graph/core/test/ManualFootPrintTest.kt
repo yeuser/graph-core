@@ -89,7 +89,7 @@ private fun printStatistics(cnt: Int, sumTime: Long, action: String) {
     println("\tAvg: ${"%,.2f".format(sumTime.toDouble() * 1e6 / cnt)}µs per entry!")
 }
 
-private fun printMemory(nodes: Long, edges: Long) {
+private fun printMemory(nodes: Int, edges: Int) {
     val memory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()
     println(
         """

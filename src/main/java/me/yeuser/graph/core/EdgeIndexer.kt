@@ -15,7 +15,7 @@ class EdgeIndexer<T>(
 
     private val lock: ReadWriteLock = ReentrantReadWriteLock()
     private val edges: Long2ShortMap = Long2ShortOpenHashMap(expectedNumberOfEdges, 1f)
-    private val byType: Array<VerticesMap> =
+    private val edgesByType: Array<VerticesMap> =
         (1..edgeTypes.size).map { VerticesMap() }.toTypedArray()
 
     override fun addEdge(
@@ -27,7 +27,7 @@ class EdgeIndexer<T>(
     ) {
         val edgeType = edgeTypes.indexOfFirst { it == type }
         val typeWeight = getTypeWeight(edgeType, weight)
-        val connectionTypeMap = byType[edgeType]
+        val connectionTypeMap = edgesByType[edgeType]
         addEdgeInternal(fromIdx, toIdx, typeWeight, connectionTypeMap)
         if (biDirectional) {
             addEdgeInternal(toIdx, fromIdx, typeWeight, connectionTypeMap)
@@ -56,10 +56,10 @@ class EdgeIndexer<T>(
         return (t * precision + w).toShort()
     }
 
-    override fun getEdgeTypeAndWeight(fromIdx: Int, toIdx: Int): Pair<T, Double> {
+    override fun getEdgeTypeAndWeight(fromIdx: Int, toIdx: Int): TypeWeight<T> {
         val fromTo = getFromTo(fromIdx, toIdx)
         lock.readLock().lock()
-        Preconditions.checkState(edges.containsKey(fromTo), "Given `from->to` edge was not found!")
+        Preconditions.checkState(edgesByType.any { it.has(fromIdx, toIdx) }, "Given `from->to` edge was not found!")
         val typeWeight = edges.get(fromTo)
         lock.readLock().unlock()
         return Pair(edgeTypes[getEdgeType(typeWeight)], getWeight(typeWeight))
@@ -73,24 +73,27 @@ class EdgeIndexer<T>(
         return ((typeWeight.toInt() and 0xFFFF) % precision + 1.0) / precision
     }
 
-    override fun getConnectionsByType(type: T?, fromIdx: Int): List<Int> {
+    override fun getConnectionsByType(type: T?, fromIdx: Int): List<Edge<T>> {
         Preconditions.checkState(
             type == null || edgeTypes.contains(type),
             "Given `type` is unknown!"
         )
         lock.readLock().lock()
         val cons =
-            byType
+            edgesByType
                 .filterIndexed { index, _ -> type == null || type == edgeTypes[index] }
                 .mapNotNull { it.get(fromIdx) }
-                .flatten()
+                .flatten().map {
+                    val (t, w) = getEdgeTypeAndWeight(fromIdx, it)
+                    Edge(fromIdx, it, t, w)
+                }
         lock.readLock().unlock()
         return cons
     }
 
-    override fun getEdgeCount(): Long {
+    override fun getEdgeCount(): Int {
         lock.readLock().lock()
-        val size = edges.size.toLong()
+        val size = edgesByType.sumBy { it.size() }
         lock.readLock().unlock()
         return size
     }

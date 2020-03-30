@@ -22,20 +22,20 @@ class VerticesMap(
         lock.writeLock().lock()
         vertices.computeIfAbsent(fromIdx) { IntRBTreeSet() }.add(toIdx)
         lock.writeLock().unlock()
-        checkShrink()
+        shrink()
     }
 
-    private fun checkShrink() {
+    private fun shrink(force: Boolean = false) {
         lock.writeLock().lock()
         cOps++
-        if (cOps > bufferOpsLimit) {
-            makeCompact()
+        if (force || cOps > bufferOpsLimit) {
+            compress()
             cOps = 0
         }
         lock.writeLock().unlock()
     }
 
-    private fun makeCompact() {
+    private fun compress() {
         vertices.forEach { (key, value) ->
             if (verticesCompact.size <= key) {
                 val delta = min(
@@ -65,7 +65,23 @@ class VerticesMap(
                 ?.asIterable()
         ).flatten()
         lock.readLock().unlock()
-        checkShrink()
+        shrink()
         return rbTreeSet.takeUnless { it.isEmpty() }
+    }
+
+    fun has(fromIdx: Int, toIdx: Int): Boolean {
+        lock.readLock().lock()
+        val found = vertices[fromIdx]?.contains(toIdx) == true ||
+            fromIdx < verticesCompact.size && verticesCompact[fromIdx]?.has(toIdx) == true
+        lock.readLock().unlock()
+        return found
+    }
+
+    fun size(): Int {
+        shrink(true)
+        lock.readLock().lock()
+        val size = verticesCompact.sumBy { it?.size ?: 0 }
+        lock.readLock().unlock()
+        return size
     }
 }

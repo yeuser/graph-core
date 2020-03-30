@@ -1,33 +1,26 @@
 package me.yeuser.graph.core
 
-interface Graph {
+interface Graph<T : Comparable<T>> {
 
-    fun getNodeCount(): Long
+    fun getNodeCount(): Int
 
-    fun getEdgeCount(): Long
+    fun getEdgeCount(): Int
 
-    fun addEdge(from: Long, to: Long, type: String, weight: Double, biDirectional: Boolean)
+    fun addEdge(from: Long, to: Long, type: T, weight: Double, biDirectional: Boolean)
 
-    fun getEdge(from: Long, to: Long): GraphEdge
+    fun getEdge(from: Long, to: Long): GraphEdge<T>
 
-    fun getEdgeConnections(from: Long): Iterator<GraphEdge> = getEdgeConnectionsOfType(from, null)
-
-    fun getEdgeConnectionsOfType(
+    fun getEdgeConnections(
         from: Long,
-        type: String?
-    ): Iterator<GraphEdge> = getEdgeConnectionsOfTypeAndWeightInRange(from, type, 0.0, 1.0)
-
-    fun getEdgeConnectionsOfTypeAndWeightInRange(
-        from: Long,
-        type: String?,
-        minWeight: Double,
-        maxWeight: Double
-    ): Iterator<GraphEdge>
+        type: T? = null,
+        minWeight: Double = 0.0,
+        maxWeight: Double = 1.0
+    ): Iterator<GraphEdge<T>>
 }
 
-data class GraphEdge internal constructor(
+data class GraphEdge<T> internal constructor(
     val from: Long,
     val to: Long,
-    val edgeType: String,
+    val edgeType: T,
     val weight: Double
 )
