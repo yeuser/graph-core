@@ -11,7 +11,7 @@ class FunctionalityTester {
     @Throws(InterruptedException::class, IOException::class)
     fun testFunctionality() {
         val random = Random()
-        val graph = GraphInMem(100, 1000, 100, "A", "B", "C")
+        val graph = GraphInMem(100, 100, "A", "B", "C")
         val nodeEdges = (0 until 10).associateWith { i ->
             (0 until 10).filter { j ->
                 i != j && random.nextBoolean()
@@ -43,7 +43,7 @@ class FunctionalityTester {
     @Throws(InterruptedException::class, IOException::class)
     fun testFunctionalityBidirectional() {
         val random = Random()
-        val graph = GraphInMem(100, 1000, 100, "A", "B", "C")
+        val graph = GraphInMem(100, 100, "A", "B", "C")
         val nodeEdges = (0 until 9).associateWith {
             (it + 1 until 10).filter { random.nextBoolean() }
         }

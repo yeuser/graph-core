@@ -1,7 +1,7 @@
 package me.yeuser.graph.core
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
-import it.unimi.dsi.fastutil.ints.IntRBTreeSet
+import it.unimi.dsi.fastutil.ints.Int2ShortAVLTreeMap
 import java.util.concurrent.locks.ReadWriteLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.math.max
@@ -14,13 +14,13 @@ class VerticesMap(
 ) {
 
     private val lock: ReadWriteLock = ReentrantReadWriteLock()
-    private val vertices: Int2ObjectOpenHashMap<IntRBTreeSet> = Int2ObjectOpenHashMap(32 * 1024, 1f)
-    private var verticesCompact: Array<BigIntSet?> = emptyArray()
+    private val vertices: Int2ObjectOpenHashMap<MutableMap<Int, Short>> = Int2ObjectOpenHashMap(32 * 1024, 1f)
+    private var verticesCompact: Array<BigInt2Short?> = emptyArray()
     private var cOps = 0
 
-    fun add(fromIdx: Int, toIdx: Int) {
+    fun add(fromIdx: Int, toIdx: Int, value: Short) {
         lock.writeLock().lock()
-        vertices.computeIfAbsent(fromIdx) { IntRBTreeSet() }.add(toIdx)
+        vertices.computeIfAbsent(fromIdx) { Int2ShortAVLTreeMap() }[toIdx] = value
         lock.writeLock().unlock()
         shrink()
     }
@@ -46,18 +46,18 @@ class VerticesMap(
             }
             var v = verticesCompact[key]
             if (v == null) {
-                v = BigIntSet()
+                v = BigInt2Short()
                 verticesCompact[key] = v
             }
-            v.addAll(value.toIntArray())
+            v.addAll(value)
         }
         vertices.clear()
     }
 
-    fun get(fromIdx: Int): Iterable<Int>? {
+    fun get(fromIdx: Int): Iterable<Pair<Int, Short>>? {
         lock.readLock().lock()
         val rbTreeSet = listOfNotNull(
-            vertices.get(fromIdx)?.asIterable(),
+            vertices.get(fromIdx)?.asIterable()?.map { it.toPair() },
             verticesCompact
                 .takeIf { it.size > fromIdx }
                 ?.get(fromIdx)
@@ -67,6 +67,14 @@ class VerticesMap(
         lock.readLock().unlock()
         shrink()
         return rbTreeSet.takeUnless { it.isEmpty() }
+    }
+
+    fun get(fromIdx: Int, toIdx: Int): Short? {
+        lock.readLock().lock()
+        val value = vertices[fromIdx]?.get(toIdx)
+            ?: verticesCompact.getOrNull(fromIdx)?.getValue(toIdx)
+        lock.readLock().unlock()
+        return value
     }
 
     fun has(fromIdx: Int, toIdx: Int): Boolean {

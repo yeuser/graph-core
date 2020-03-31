@@ -15,7 +15,7 @@ fun main() {
     val edgesCount = nodesCount * 100
     val random = SecureRandom()
     val edgeTypes = arrayOf("A", "M", "E")
-    val graph = GraphInMem(nodesCount, edgesCount, 100, *edgeTypes)
+    val graph = GraphInMem(nodesCount, 100, *edgeTypes)
 
     println("Preparing Nodes..")
     val nodes = random.longs().asSequence().distinct().take(nodesCount).toList()

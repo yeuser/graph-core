@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions
 
 class GraphInMem(
     expectedNumberOfNodes: Int,
-    expectedNumberOfEdges: Int,
     precision: Int,
     vararg edgeTypes: String
 ) : Graph<String> {
@@ -18,9 +17,7 @@ class GraphInMem(
 
     private val edgeTypes: Array<String> = edgeTypes.distinct().toTypedArray()
     private val nodeIndexer: INodeIndexer = NodeIndexer(expectedNumberOfNodes)
-    private val edgeIndexer: IEdgeIndexer<String> = EdgeIndexer(
-        expectedNumberOfEdges, precision, this.edgeTypes
-    )
+    private val edgeIndexer: IEdgeIndexer<String> = EdgeIndexer(precision, this.edgeTypes)
 
     override fun addEdge(
         from: Long,

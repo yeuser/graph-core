@@ -14,10 +14,10 @@ class VerticesMapTester {
         val nodeEdges = (0 until nodesCount).associateWith { i ->
             (0 until nodesCount).filter { j ->
                 i != j && random.nextBoolean()
-            }
+            }.map { it to random.nextInt(Short.MAX_VALUE.toInt()).toShort() }
         }
 
-        nodeEdges.forEach { (from, toN) -> toN.forEach { vertices.add(from, it) } }
+        nodeEdges.forEach { (from, toN) -> toN.forEach { vertices.add(from, it.first, it.second) } }
 
         nodeEdges.forEach { (from, tos) ->
             val expected = tos.toSet()

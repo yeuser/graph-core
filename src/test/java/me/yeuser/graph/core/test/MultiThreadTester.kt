@@ -13,7 +13,7 @@ class MultiThreadTester {
     @Test
     @Throws(InterruptedException::class, IOException::class)
     fun testFunctionalityMultiThreaded() {
-        val graph = GraphInMem(100, 1000, 100, "A", "B", "C")
+        val graph = GraphInMem(100, 100, "A", "B", "C")
         val nodeEdges = arrayOf(
             0 to arrayOf(1, 2),
             1 to arrayOf(3, 4, 5),

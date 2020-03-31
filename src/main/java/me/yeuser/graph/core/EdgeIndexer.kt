@@ -1,20 +1,16 @@
 package me.yeuser.graph.core
 
 import com.google.common.base.Preconditions
-import it.unimi.dsi.fastutil.longs.Long2ShortMap
-import it.unimi.dsi.fastutil.longs.Long2ShortOpenHashMap
 import java.util.concurrent.locks.ReadWriteLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.math.roundToInt
 
 class EdgeIndexer<T>(
-    expectedNumberOfEdges: Int,
     private var precision: Int,
     private val edgeTypes: Array<T>
 ) : IEdgeIndexer<T> {
 
     private val lock: ReadWriteLock = ReentrantReadWriteLock()
-    private val edges: Long2ShortMap = Long2ShortOpenHashMap(expectedNumberOfEdges, 1f)
     private val edgesByType: Array<VerticesMap> =
         (1..edgeTypes.size).map { VerticesMap() }.toTypedArray()
 
@@ -41,9 +37,7 @@ class EdgeIndexer<T>(
         connectionTypeMap: VerticesMap
     ) {
         lock.writeLock().lock()
-        val fromTo = getFromTo(fromIdx, toIdx)
-        edges[fromTo] = typeWeight
-        connectionTypeMap.add(fromIdx, toIdx)
+        connectionTypeMap.add(fromIdx, toIdx, typeWeight)
         lock.writeLock().unlock()
     }
 
@@ -57,11 +51,10 @@ class EdgeIndexer<T>(
     }
 
     override fun getEdgeTypeAndWeight(fromIdx: Int, toIdx: Int): TypeWeight<T> {
-        val fromTo = getFromTo(fromIdx, toIdx)
         lock.readLock().lock()
-        Preconditions.checkState(edgesByType.any { it.has(fromIdx, toIdx) }, "Given `from->to` edge was not found!")
-        val typeWeight = edges.get(fromTo)
+        val typeWeight = edgesByType.mapNotNull { it.get(fromIdx, toIdx) }.firstOrNull()
         lock.readLock().unlock()
+        if (typeWeight == null) throw RuntimeException("The vertex was not found!")
         return Pair(edgeTypes[getEdgeType(typeWeight)], getWeight(typeWeight))
     }
 
@@ -83,9 +76,8 @@ class EdgeIndexer<T>(
             edgesByType
                 .filterIndexed { index, _ -> type == null || type == edgeTypes[index] }
                 .mapNotNull { it.get(fromIdx) }
-                .flatten().map {
-                    val (t, w) = getEdgeTypeAndWeight(fromIdx, it)
-                    Edge(fromIdx, it, t, w)
+                .flatten().map { (toIdx, typeWeight) ->
+                    Edge(fromIdx, toIdx, edgeTypes[getEdgeType(typeWeight)], getWeight(typeWeight))
                 }
         lock.readLock().unlock()
         return cons
