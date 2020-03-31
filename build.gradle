@@ -1,15 +1,26 @@
-plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.2.70'
+buildscript {
+    ext.kotlin_version = '1.3.71'
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
 }
 
 group = 'me.graph'
-version = '0.1.0'
+version = '0.2.0'
 
-//apply plugin: "kotlin"
+ext {
+    java_version = 1.8
+}
+
+apply plugin: 'kotlin'
 apply plugin: 'java'
-apply plugin: 'maven'
 
-sourceCompatibility = 1.8
+sourceCompatibility = java_version
 
 if (JavaVersion.current().isJava8Compatible()) {
     allprojects {
@@ -24,13 +35,49 @@ repositories {
     mavenCentral()
 }
 
+configurations {
+    ktlint
+}
+
 dependencies {
-    compile group: 'com.google.guava', name: 'guava', version: '26.0-jre'
-//    compile group: 'com.carrotsearch', name: 'hppc', version: '0.8.1'
-//    compile group: 'net.sf.trove4j', name: 'trove4j', version: '3.0.3'
-    compile group: 'it.unimi.dsi', name: 'fastutil', version: '8.2.2'
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    ktlint "com.pinterest:ktlint:0.36.0"
+    implementation group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-jdk8', version: '1.1.0-alpha'
+
+    implementation group: 'com.google.guava', name: 'guava', version: '26.0-jre'
+//    implementation group: 'com.carrotsearch', name: 'hppc', version: '0.8.1'
+//    implementation group: 'net.sf.trove4j', name: 'trove4j', version: '3.0.3'
+    implementation group: 'it.unimi.dsi', name: 'fastutil', version: '8.2.2'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    testImplementation group: 'junit', name: 'junit', version: '4.12'
+}
+
+task ktlint(type: JavaExec, group: "verification") {
+    description = "Check Kotlin code style."
+    classpath = configurations.ktlint
+    main = "com.pinterest.ktlint.Main"
+    args "src/**/*.kt"
+    // to generate report in checkstyle format prepend following args:
+    // "--reporter=plain", "--reporter=checkstyle,output=${buildDir}/ktlint.xml"
+    // see https://github.com/pinterest/ktlint#usage for more
+}
+check.dependsOn ktlint
+
+task ktlintFormat(type: JavaExec, group: "formatting") {
+    description = "Fix Kotlin code style deviations."
+    classpath = configurations.ktlint
+    main = "com.pinterest.ktlint.Main"
+    args "-F", "src/**/*.kt"
+}
+
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = java_version
+    }
+}
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = java_version
+    }
 }
 
 jar {
@@ -44,33 +91,21 @@ jar {
     }
 }
 
-if (project.plugins.hasPlugin('java')) {
-    manifest {
-        attributes 'provider': 'gradle'
-    }
-    configurations {
-        published
-    }
-    task sourceJar(type: Jar) {
-        from sourceSets.main.allSource
-        classifier = 'sources'
-    }
-    task javadocJar(type: Jar, dependsOn: javadoc) {
-        classifier = 'javadoc'
-        from javadoc.destinationDir
-    }
-    artifacts {
-        published sourceJar
-        published javadocJar
-    }
+manifest {
+    attributes 'provider': 'gradle'
 }
-compileKotlin {
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
+configurations {
+    published
 }
-compileTestKotlin {
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
+task sourceJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+artifacts {
+    published sourceJar
+    published javadocJar
 }
