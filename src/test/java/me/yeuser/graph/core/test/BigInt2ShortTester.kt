@@ -11,6 +11,18 @@ class BigInt2ShortTester {
     val random = Random()
 
     @Test
+    fun test1() {
+        // FixME: Overwriting the weights is not possible at the moment
+        // Expected : (6088, 16356)
+        // Actual   : (6088, 16)
+        val i2s = BigInt2Short()
+        i2s.addAll(mapOf(6088 to 16.toShort()))
+        i2s.addAll(mapOf(6088 to (-1356).toShort()))
+        i2s.addAll(mapOf(6088 to 16356.toShort()))
+        Assert.assertEquals(6088 to 16356.toShort(), i2s.asSequence().toList()[0])
+    }
+
+    @Test
     fun testFunctionality() {
         val testSets = (1..100).map {
             random.ints(50L + random.nextInt(700), 5, 30_000).distinct().toList()
