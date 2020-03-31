@@ -8,13 +8,10 @@ import org.junit.Assert
 import org.junit.Test
 
 class BigInt2ShortTester {
-    val random = Random()
+    private val random = Random()
 
     @Test
-    fun test1() {
-        // FixME: Overwriting the weights is not possible at the moment
-        // Expected : (6088, 16356)
-        // Actual   : (6088, 16)
+    fun `testing Overwriting the weights`() {
         val i2s = BigInt2Short()
         i2s.addAll(mapOf(6088 to 16.toShort()))
         i2s.addAll(mapOf(6088 to (-1356).toShort()))

@@ -1,6 +1,6 @@
 package me.yeuser.graph.core
 
-import it.unimi.dsi.fastutil.Arrays
+import java.lang.IllegalStateException
 
 typealias Int2ShortBlock = Pair<IntArray, ShortArray>
 
@@ -18,29 +18,45 @@ class BigInt2Short(
     private fun addAll(i2sBlock: Int2ShortBlock) {
         val inArr = i2sBlock.first
         val finds = findSortedArr(inArr)
-        val toBeAdded = Int2ShortBlock(
+
+        // Overwrite the weights for the existing items
+        finds.forEachIndexed { idx: Int, blockIndicesValue: BlockIndicesValue? ->
+            if (blockIndicesValue != null) {
+                blocks[blockIndicesValue.first].second[blockIndicesValue.second] = i2sBlock.second[idx]
+            }
+        }
+
+        val addition = Int2ShortBlock(
             i2sBlock.first.filterIndexed { i, _ -> finds[i] == null }.toIntArray(),
             i2sBlock.second.filterIndexed { i, _ -> finds[i] == null }.toShortArray()
         )
         when {
-            blocks.isEmpty() || blocks.last().first.size >= blockSize -> blocks.add(toBeAdded)
+            blocks.isEmpty() || blocks.last().first.size >= blockSize -> blocks.add(addition)
             else -> {
-                val block = Int2ShortBlock(
-                    blocks.last().first + toBeAdded.first,
-                    blocks.last().second + toBeAdded.second
-                )
-                Arrays.mergeSort(0, block.first.size,
-                    { k1, k2 -> block.first[k1].compareTo(block.first[k2]) },
-                    { a, b ->
-                        val itmp = block.first[a]
-                        block.first[a] = block.first[b]
-                        block.first[b] = itmp
-
-                        val stmp = block.second[a]
-                        block.second[a] = block.second[b]
-                        block.second[b] = stmp
-                    })
-                blocks[blocks.lastIndex] = block
+                val lastBlock = blocks.last()
+                val len = lastBlock.first.size + addition.first.size
+                val retBlock = Int2ShortBlock(IntArray(len), ShortArray(len))
+                var i = 0 // lastBlock
+                var j = 0 // addition
+                while (i + j < len) {
+                    val fromAddition = when {
+                        i == lastBlock.first.size -> true
+                        j == addition.first.size -> false
+                        addition.first[j] < lastBlock.first[i] -> true
+                        lastBlock.first[i] < addition.first[j] -> false
+                        else -> throw IllegalStateException()
+                    }
+                    if (fromAddition) {
+                        retBlock.first[i + j] = addition.first[j]
+                        retBlock.second[i + j] = addition.second[j]
+                        j++
+                    } else {
+                        retBlock.first[i + j] = lastBlock.first[i]
+                        retBlock.second[i + j] = lastBlock.second[i]
+                        i++
+                    }
+                }
+                blocks[blocks.lastIndex] = retBlock
             }
         }
     }
