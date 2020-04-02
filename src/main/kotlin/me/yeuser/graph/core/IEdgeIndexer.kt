@@ -3,7 +3,7 @@ package me.yeuser.graph.core
 interface IEdgeIndexer<T> {
     fun addEdge(weight: Double, type: T, fromIdx: Int, toIdx: Int, biDirectional: Boolean)
     fun getEdgeTypeAndWeight(fromIdx: Int, toIdx: Int): TypeWeight<T>
-    fun getConnectionsByType(type: T?, fromIdx: Int): List<Edge<T>>
+    fun getConnections(fromIdx: Int): Sequence<Edge<T>>
     fun getEdgeCount(): Int
 }
 

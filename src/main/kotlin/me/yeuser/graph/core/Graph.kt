@@ -15,7 +15,7 @@ interface Graph<T : Comparable<T>> {
         type: T? = null,
         minWeight: Double = 0.0,
         maxWeight: Double = 1.0
-    ): Iterator<GraphEdge<T>>
+    ): Sequence<GraphEdge<T>>
 }
 
 data class GraphEdge<T> internal constructor(

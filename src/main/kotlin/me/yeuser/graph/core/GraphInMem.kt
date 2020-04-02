@@ -52,17 +52,18 @@ class GraphInMem(
         type: String?,
         minWeight: Double,
         maxWeight: Double
-    ): Iterator<GraphEdge<String>> {
+    ): Sequence<GraphEdge<String>> {
         val fromIdx = nodeIndexer.indexOf(from)
         Preconditions.checkState(fromIdx >= 0, "Given `from` node was not found!")
         Preconditions.checkState(
             type == null || edgeTypes.contains(type),
             "Given `type` is unknown!"
         )
-        return edgeIndexer.getConnectionsByType(type, fromIdx)
+        return edgeIndexer.getConnections(fromIdx)
+            .run { if (type == null) this else filter { edge -> edge.type == type } }
             .filter { edge -> edge.weight in minWeight..maxWeight }
             .map { GraphEdge(from, nodeIndexer.fromIndex(it.toIdx), it.type, it.weight) }
-            .iterator()
+
     }
 
     override fun getNodeCount(): Int {

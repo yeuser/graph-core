@@ -1,12 +1,14 @@
 package me.yeuser.graph.core.test
 
-import java.io.IOException
-import java.util.Random
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import me.yeuser.graph.core.GraphInMem
 import org.junit.Test
+import java.io.IOException
+import java.util.Random
 
 class MultiThreadTester {
 
@@ -28,8 +30,7 @@ class MultiThreadTester {
         val random = Random()
         val deferredRuns = (1..200).map {
             GlobalScope.async {
-                Thread.yield()
-                Thread.sleep(100)
+                delay(100)
                 val nodes = random.longs(9).toArray()
                 val edges = nodeEdgesFlattened.associate { (from, to) ->
                     nodes[from] to nodes[to] to (random.nextInt(100) + 1) / 100.0
@@ -40,7 +41,7 @@ class MultiThreadTester {
                     )
                 }
 
-                Thread.sleep(100)
+                delay(100)
 
                 edges.forEach { (fromTo, weight) ->
                     val (from, to) = fromTo
@@ -48,12 +49,8 @@ class MultiThreadTester {
                     assert(edge.weight == weight) { "$edge has not the weight = $weight" }
                 }
             }
-        }.toTypedArray()
-
-        runBlocking {
-            deferredRuns.forEach {
-                it.await()
-            }
         }
+
+        runBlocking { deferredRuns.awaitAll() }
     }
 }

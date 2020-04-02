@@ -54,19 +54,17 @@ class VerticesMap(
         vertices.clear()
     }
 
-    fun get(fromIdx: Int): Iterable<Pair<Int, Short>>? {
+    fun get(fromIdx: Int): Sequence<Pair<Int, Short>>? {
         lock.readLock().lock()
-        val rbTreeSet = listOfNotNull(
-            vertices.get(fromIdx)?.asIterable()?.map { it.toPair() },
-            verticesCompact
-                .takeIf { it.size > fromIdx }
+        val rbTreeSet = sequenceOf(
+            vertices.get(fromIdx)?.asSequence()?.map { it.toPair() },
+            verticesCompact.takeIf { it.size > fromIdx }
                 ?.get(fromIdx)
                 ?.asSequence()
-                ?.asIterable()
-        ).flatten()
+        ).flatMap { it?.asSequence().orEmpty() }
         lock.readLock().unlock()
         shrink()
-        return rbTreeSet.takeUnless { it.isEmpty() }
+        return rbTreeSet.takeIf { it.any() }
     }
 
     fun get(fromIdx: Int, toIdx: Int): Short? {
@@ -77,16 +75,8 @@ class VerticesMap(
         return value
     }
 
-    fun has(fromIdx: Int, toIdx: Int): Boolean {
-        lock.readLock().lock()
-        val found = vertices[fromIdx]?.contains(toIdx) == true ||
-            fromIdx < verticesCompact.size && verticesCompact[fromIdx]?.has(toIdx) == true
-        lock.readLock().unlock()
-        return found
-    }
-
     fun size(): Int {
-        shrink(true)
+        shrink(force = true)
         lock.readLock().lock()
         val size = verticesCompact.sumBy { it?.size ?: 0 }
         lock.readLock().unlock()
