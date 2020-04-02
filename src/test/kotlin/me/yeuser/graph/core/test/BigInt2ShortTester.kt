@@ -1,10 +1,13 @@
 package me.yeuser.graph.core.test
 
+import io.kotest.core.annotation.Ignored
+import jdk.nashorn.internal.ir.annotations.Ignore
 import java.util.Random
 import kotlin.streams.asSequence
 import kotlin.streams.toList
 import kotlin.test.assertEquals
 import me.yeuser.graph.core.BigInt2Short
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 class BigInt2ShortTester {
@@ -57,6 +60,7 @@ class BigInt2ShortTester {
         assert(bigIntSet.getValues((0..4).toList().toIntArray()).all { it == null })
     }
 
+    @Disabled
     @Test
     fun testPerformance() {
 

@@ -21,7 +21,7 @@ class FunctionalityTester {
         val weight1 = (1).toDouble() / precision
         val type1 = "type-1"
         graphInMem.addEdge(1L, 2L, type1, weight1, false)
-        val weight2 = (random.nextInt(precision - 1)).toDouble() / precision
+        val weight2 = (1 + random.nextInt(precision - 1)).toDouble() / precision
         val type2 = "type-${random.nextInt(typesCount)}"
         graphInMem.addEdge(2L, 3L, type2, weight2, false)
         val weight3 = (precision).toDouble() / precision
