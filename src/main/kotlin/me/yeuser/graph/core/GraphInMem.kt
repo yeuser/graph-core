@@ -35,7 +35,17 @@ class GraphInMem(
             "Given `type` is unknown!"
         }
 
-        this.edgeIndexer.addEdge(weight, type, fromIdx, toIdx, biDirectional)
+        this.edgeIndexer.addEdge(fromIdx, toIdx, type, weight, biDirectional)
+    }
+
+    override fun removeEdge(
+        from: Long,
+        to: Long,
+        biDirectional: Boolean
+    ) {
+        val fromIdx = nodeIndexer.indexOf(from)
+        val toIdx = nodeIndexer.indexOf(to)
+        this.edgeIndexer.removeEdge(fromIdx, toIdx, biDirectional)
     }
 
     override fun getEdge(from: Long, to: Long): GraphEdge<String> {
@@ -63,7 +73,6 @@ class GraphInMem(
             .run { if (type == null) this else filter { edge -> edge.type == type } }
             .filter { edge -> edge.weight in minWeight..maxWeight }
             .map { GraphEdge(from, nodeIndexer.fromIndex(it.toIdx), it.type, it.weight) }
-
     }
 
     override fun getNodeCount(): Int {

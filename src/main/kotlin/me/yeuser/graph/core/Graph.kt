@@ -8,6 +8,8 @@ interface Graph<T : Comparable<T>> {
 
     fun addEdge(from: Long, to: Long, type: T, weight: Double, biDirectional: Boolean)
 
+    fun removeEdge(from: Long, to: Long, biDirectional: Boolean)
+
     fun getEdge(from: Long, to: Long): GraphEdge<T>
 
     fun getEdgeConnections(

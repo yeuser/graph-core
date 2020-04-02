@@ -13,28 +13,47 @@ class EdgeIndexer<T>(
     private val edges = VerticesMap()
 
     override fun addEdge(
-        weight: Double,
-        type: T,
         fromIdx: Int,
         toIdx: Int,
+        type: T,
+        weight: Double,
         biDirectional: Boolean
     ) {
         val edgeType = edgeTypes.indexOfFirst { it == type }
         val typeWeight = getTypeWeight(edgeType, weight)
-        addEdgeInternal(fromIdx, toIdx, typeWeight, edges)
+        addEdgeInternal(fromIdx, toIdx, typeWeight)
         if (biDirectional) {
-            addEdgeInternal(toIdx, fromIdx, typeWeight, edges)
+            addEdgeInternal(toIdx, fromIdx, typeWeight)
         }
     }
 
     private fun addEdgeInternal(
         fromIdx: Int,
         toIdx: Int,
-        typeWeight: Short,
-        connectionTypeMap: VerticesMap
+        typeWeight: Short
     ) {
         lock.writeLock().lock()
-        connectionTypeMap.add(fromIdx, toIdx, typeWeight)
+        edges.add(fromIdx, toIdx, typeWeight)
+        lock.writeLock().unlock()
+    }
+
+    override fun removeEdge(
+        fromIdx: Int,
+        toIdx: Int,
+        biDirectional: Boolean
+    ) {
+        removeEdgeInternal(fromIdx, toIdx)
+        if (biDirectional) {
+            removeEdgeInternal(toIdx, fromIdx)
+        }
+    }
+
+    private fun removeEdgeInternal(
+        fromIdx: Int,
+        toIdx: Int
+    ) {
+        lock.writeLock().lock()
+        edges.remove(fromIdx, toIdx)
         lock.writeLock().unlock()
     }
 
