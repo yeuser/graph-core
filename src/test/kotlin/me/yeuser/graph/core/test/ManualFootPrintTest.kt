@@ -1,6 +1,5 @@
 package me.yeuser.graph.core.test
 
-import java.io.IOException
 import java.security.SecureRandom
 import kotlin.streams.asSequence
 import me.yeuser.graph.core.GraphInMem
@@ -8,7 +7,6 @@ import me.yeuser.graph.core.GraphInMem
 /**
  * Manual Memory FootPrint Test
  */
-@Throws(InterruptedException::class, IOException::class)
 fun main() {
     // Get the Java runtime
     val nodesCount = 1_000_000

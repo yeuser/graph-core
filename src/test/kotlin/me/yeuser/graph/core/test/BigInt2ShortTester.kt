@@ -3,9 +3,9 @@ package me.yeuser.graph.core.test
 import java.util.Random
 import kotlin.streams.asSequence
 import kotlin.streams.toList
+import kotlin.test.assertEquals
 import me.yeuser.graph.core.BigInt2Short
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class BigInt2ShortTester {
     private val random = Random()
@@ -16,7 +16,7 @@ class BigInt2ShortTester {
         i2s.addAll(mapOf(6088 to 16.toShort()))
         i2s.addAll(mapOf(6088 to (-1356).toShort()))
         i2s.addAll(mapOf(6088 to 16356.toShort()))
-        Assert.assertEquals(6088 to 16356.toShort(), i2s.asSequence().toList()[0])
+        assertEquals(6088 to 16356.toShort(), i2s.asSequence().toList()[0])
     }
 
     @Test
@@ -38,9 +38,9 @@ class BigInt2ShortTester {
 
             assert(bigIntSet.getValues(testSet.keys.toIntArray()).all { it != null })
 
-            Assert.assertEquals(allInts.size, bigIntSet.size)
+            assertEquals(allInts.size, bigIntSet.size)
 
-            Assert.assertEquals(
+            assertEquals(
                 allInts.entries.map { it.toPair() }.sortedBy { it.first }.toList(),
                 bigIntSet.asSequence().sortedBy { it.first }.toList()
             )
@@ -68,7 +68,7 @@ class BigInt2ShortTester {
     """.trimIndent()
         )
         val titles = listOf(
-            "method".padStart(padSize),
+            "method".padStart(20),
             "time (ms)".padEnd(padSize),
             "memory (bytes)".padEnd(padSize),
             "bytes per item".padEnd(padSize)
@@ -115,7 +115,7 @@ class BigInt2ShortTester {
 
             println(
                 listOf(
-                    map.javaClass.name.padStart(pads[0]),
+                    map.javaClass.simpleName.padStart(pads[0]),
                     "%,d".format(time1).padStart(pads[1]),
                     "%,d".format(memory1).padStart(pads[2]),
                     "%,.2f".format(memory1.toFloat() / map.size).padStart(pads[3])
@@ -137,7 +137,7 @@ class BigInt2ShortTester {
 
             println(
                 listOf(
-                    bigInt2Short.javaClass.name.padStart(pads[0]).padStart(pads[0]),
+                    bigInt2Short.javaClass.simpleName.padStart(pads[0]).padStart(pads[0]),
                     "%,d".format(time2).padStart(pads[1]),
                     "%,d".format(memory2).padStart(pads[2]),
                     "%,.2f".format(memory2.toFloat() / bigInt2Short.size).padStart(pads[3])
@@ -147,7 +147,7 @@ class BigInt2ShortTester {
     }
 
     private fun gc() {
-        print("---------------------------gc")
+        print(" - gc")
         System.out.flush()
         // Run the garbage collector
         System.gc()
@@ -161,6 +161,6 @@ class BigInt2ShortTester {
         System.gc()
         Thread.yield()
         // Hoping that garbage collector is called after so many yields and sleeps
-        println("---------------------------!")
+        println(" - !")
     }
 }

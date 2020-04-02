@@ -2,7 +2,7 @@ package me.yeuser.graph.core.test
 
 import java.util.Random
 import me.yeuser.graph.core.VerticesMap
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class VerticesMapTester {
 
