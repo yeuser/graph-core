@@ -21,28 +21,35 @@ class BigInt2ShortTester {
 
     @Test
     fun testFunctionality() {
-        val testSets = (1..100).map {
-            random.ints(50L + random.nextInt(700), 5, 30_000).distinct().toList()
-                .associateWith { random.nextInt(Short.MAX_VALUE.toInt()).toShort() }
-        }
 
         val allInts = mutableMapOf<Int, Short>()
         val bigIntSet = BigInt2Short()
 
-        for ((index, testSet) in testSets.withIndex()) {
-            allInts.putAll(testSet)
-            println("Test#${index + 1}: length:${testSet.size}, total size: ${allInts.size}")
+        (1..100).map {
+            random.ints(50L + random.nextInt(700), 5, 30_000).distinct().toList()
+                .associateWith { random.nextInt(Short.MAX_VALUE.toInt()).toShort() } to
+                random.ints(50L + random.nextInt(700), 5, 30_000).distinct().toList()
+        }.withIndex().forEach { (index, testSet) ->
+            val (insertSet, deleteSet) = testSet
+            allInts.putAll(insertSet)
+            deleteSet.forEach { allInts.remove(it) }
+            print("Test#${index + 1}: length:${insertSet.size}, total size: ${allInts.size}")
 
-            bigIntSet.addAll(testSet)
-            testSet.keys.forEach { testNumber -> assert(bigIntSet.has(testNumber)) }
+            bigIntSet.addAll(insertSet)
+            insertSet.keys.forEach { testNumber -> assert(bigIntSet.has(testNumber)) }
 
-            assert(bigIntSet.getValues(testSet.keys.toIntArray()).all { it != null })
+            assert(bigIntSet.getValues(insertSet.keys.toIntArray()).all { it != null })
 
+            bigIntSet.removeAll(deleteSet)
             assertEquals(allInts.size, bigIntSet.size)
+            println(", dirty items: ${bigIntSet.dirtyCells}")
 
             assertEquals(
                 allInts.entries.map { it.toPair() }.sortedBy { it.first }.toList(),
-                bigIntSet.asSequence().sortedBy { it.first }.toList()
+                bigIntSet.asSequence().sortedBy { it.first }.toList(), """
+                `allInts` has extra: ${allInts.entries.map { it.toPair() }.minus(bigIntSet.asSequence())} 
+                `bigIntSet` has extra: ${bigIntSet.asSequence().minus(allInts.entries.map { it.toPair() }.toSet())}
+                """.trimIndent()
             )
         }
 
@@ -89,8 +96,7 @@ class BigInt2ShortTester {
             var memory0 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()
             time0 = System.currentTimeMillis() - time0
             gc()
-            memory0 =
-                Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() - memory0
+            memory0 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() - memory0
 
             println(
                 listOf(
@@ -110,8 +116,7 @@ class BigInt2ShortTester {
             }
             time1 = System.currentTimeMillis() - time1
             gc()
-            memory1 =
-                Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() - memory1
+            memory1 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() - memory1
 
             println(
                 listOf(
@@ -123,7 +128,22 @@ class BigInt2ShortTester {
             )
 
             gc()
+            time0 = System.currentTimeMillis()
+            memory0 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()
+            time0 = System.currentTimeMillis() - time0
+            gc()
+            memory0 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() - memory0
 
+            println(
+                listOf(
+                    "-NOOP-".padStart(pads[0]),
+                    "%,d".format(time0).padStart(pads[1]),
+                    "%,d".format(memory0).padStart(pads[2]),
+                    "".padEnd(pads[3], '-')
+                ).joinToString(" | ")
+            )
+
+            gc()
             var time2 = System.currentTimeMillis()
             var memory2 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()
             val bigInt2Short = BigInt2Short()
@@ -132,8 +152,7 @@ class BigInt2ShortTester {
             }
             time2 = System.currentTimeMillis() - time2
             gc()
-            memory2 =
-                Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() - memory2
+            memory2 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() - memory2
 
             println(
                 listOf(

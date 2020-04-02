@@ -4,8 +4,11 @@ import io.kotest.matchers.shouldBe
 import java.security.SecureRandom
 import java.util.Random
 import me.yeuser.graph.core.GraphEdge
+import me.yeuser.graph.core.GraphEdgeNotFound
 import me.yeuser.graph.core.GraphInMem
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.assertThrows
 
 class FunctionalityTester {
 
@@ -27,6 +30,26 @@ class FunctionalityTester {
         graphInMem.getEdge(1L, 2L) shouldBe GraphEdge(1L, 2L, type1, weight1)
         graphInMem.getEdge(2L, 3L) shouldBe GraphEdge(2L, 3L, type2, weight2)
         graphInMem.getEdge(3L, 4L) shouldBe GraphEdge(3L, 4L, type3, weight3)
+    }
+
+    @Test
+    fun `test edge removal at GraphInMem`() {
+        val graphInMem = GraphInMem(100, 100, "A", "B", "C")
+        val (from, to) = 1L to 2L
+        graphInMem.addEdge(from, to, "A", 0.5, true)
+        graphInMem.removeEdge(from, to, false)
+        assertThrows<GraphEdgeNotFound> {
+            graphInMem.getEdge(from, to)
+        }
+        assertDoesNotThrow {
+            graphInMem.getEdge(to, from)
+        }
+        assertDoesNotThrow {
+            graphInMem.removeEdge(from, to, true)
+        }
+        assertThrows<GraphEdgeNotFound> {
+            graphInMem.getEdge(to, from)
+        }
     }
 
     @Test

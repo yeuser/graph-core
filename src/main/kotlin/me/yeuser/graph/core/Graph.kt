@@ -1,5 +1,7 @@
 package me.yeuser.graph.core
 
+import java.lang.Exception
+
 interface Graph<T : Comparable<T>> {
 
     fun getNodeCount(): Int
@@ -26,3 +28,5 @@ data class GraphEdge<T> internal constructor(
     val edgeType: T,
     val weight: Double
 )
+
+class GraphEdgeNotFound(val from: Long, val to: Long) : Exception("Graph has no edge from $from to $to.")

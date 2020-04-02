@@ -62,11 +62,11 @@ class EdgeIndexer<T>(
         return (t * precision + w).toShort()
     }
 
-    override fun getEdgeTypeAndWeight(fromIdx: Int, toIdx: Int): TypeWeight<T> {
+    override fun getEdgeTypeAndWeight(fromIdx: Int, toIdx: Int): TypeWeight<T>? {
         lock.readLock().lock()
         val typeWeight = edges.get(fromIdx, toIdx)
         lock.readLock().unlock()
-        if (typeWeight == null) throw RuntimeException("The vertex was not found!")
+        if (typeWeight == null) return null
         return Pair(edgeTypes[getEdgeType(typeWeight)], getWeight(typeWeight))
     }
 

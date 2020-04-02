@@ -27,7 +27,7 @@ class VerticesMap(
 
     fun remove(fromIdx: Int, toIdx: Int) {
         lock.writeLock().lock()
-        vertices.computeIfPresent(fromIdx) { _, map -> map.remove(toIdx);map }
+        vertices.computeIfPresent(fromIdx) { _, map -> map.remove(toIdx); map }
         verticesCompact.getOrNull(fromIdx)
             ?.takeIf { it.has(toIdx) }
             ?.addAll(mapOf(toIdx to (-1).toShort()))

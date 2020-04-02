@@ -15,6 +15,16 @@ class BigInt2Short(
         addAll(Int2ShortBlock(list.map { it.key }.toIntArray(), list.map { it.value }.toShortArray()))
     }
 
+    fun removeAll(keys: Iterable<Int>) {
+        val removeFlag = (-1).toShort()
+        val finds = findSortedArr(keys.sorted().toIntArray())
+
+        // Overwrite the weights with -1≈[0xFFFF in short]
+        finds.filterNotNull().forEach { (idx, i, _) ->
+            blocks[idx].second[i] = removeFlag
+        }
+    }
+
     private fun addAll(i2sBlock: Int2ShortBlock) {
         val inArr = i2sBlock.first
         val finds = findSortedArr(inArr)
@@ -114,8 +124,11 @@ class BigInt2Short(
 
     fun asSequence(): Sequence<Pair<Int, Short>> = ArrayList(blocks).asSequence()
         .flatMap { (ints, shorts) -> ints.indices.asSequence().map { i -> ints[i] to shorts[i] } }
+        .filter { (_, v) -> v != (-1).toShort() }
 
-    val size: Int get() = blocks.sumBy { it.first.size }
+    val size: Int get() = blocks.sumBy { it.first.size } - dirtyCells
+
+    val dirtyCells: Int get() = blocks.sumBy { it.second.count { it == (-1).toShort() } }
 }
 
 typealias BlockIndicesValue = Triple<Int, Int, Short>

@@ -53,7 +53,7 @@ class GraphInMem(
         Preconditions.checkState(fromIdx >= 0, "Given `from` node was not found!")
         val toIdx = nodeIndexer.indexOf(to)
         Preconditions.checkState(toIdx >= 0, "Given `to` node was not found!")
-        val (type, weight) = this.edgeIndexer.getEdgeTypeAndWeight(fromIdx, toIdx)
+        val (type, weight) = this.edgeIndexer.getEdgeTypeAndWeight(fromIdx, toIdx) ?: throw GraphEdgeNotFound(from, to)
         return GraphEdge(from, to, type, weight)
     }
 
