@@ -8,7 +8,6 @@ import me.yeuser.graph.core.GraphInMem
  * Manual Memory FootPrint Test
  */
 fun main() {
-    // Get the Java runtime
     val nodesCount = 1_000_000
     val edgesCount = nodesCount * 100
     val random = SecureRandom()
@@ -19,9 +18,7 @@ fun main() {
     val nodes = random.longs().asSequence().distinct().take(nodesCount).toList()
     println("Nodes prepared")
 
-    // Run the garbage collector
-    Runtime.getRuntime().gc()
-    Thread.yield()
+    gc()
 
     val baseMemoryDatum = printMemory(graph.getNodeCount(), graph.getEdgeCount())
 
@@ -67,10 +64,7 @@ fun main() {
         sumTimeR += time
 
         if ((i1 + 1) % 50_000 == 0) {
-            // Run the garbage collector
-            Runtime.getRuntime().gc()
-            Thread.yield()
-            // Hoping garbage collector runs after yield
+            gc()
             printStatistics(addCnt, sumTimeI, "created")
             printStatistics(getCnt, sumTimeR, "read")
             memoryData += printMemory(graph.getNodeCount(), graph.getEdgeCount())
@@ -78,11 +72,8 @@ fun main() {
     }
 
     println("All edges were created!")
-    Thread.yield()
 
-    // Run the garbage collector
-    Runtime.getRuntime().gc()
-    Thread.yield()
+    gc()
 
     printStatistics(addCnt, sumTimeI, "created")
     printStatistics(getCnt, sumTimeR, "read")
@@ -108,7 +99,7 @@ fun main() {
 
     val c = memoryData.map { md -> md.third - b * md.second - a * md.first }.average()
 
-    print("Deducted formula: `memory = ${formatMemory(a)} * nodes + ${formatMemory(b)} * edges + ${formatMemory(c)}`")
+    println("Deducted formula: `memory = ${formatMemory(a)} * nodes + ${formatMemory(b)} * edges + ${formatMemory(c)}`")
 }
 
 private fun printStatistics(cnt: Int, sumTime: Long, action: String) {
@@ -117,7 +108,7 @@ private fun printStatistics(cnt: Int, sumTime: Long, action: String) {
 }
 
 private fun printMemory(nodes: Int, edges: Int): MemoryDatum {
-    val memory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()
+    val memory = usedMemory()
     println(
         """
     Used memory: ${formatMemory(memory.toDouble())}

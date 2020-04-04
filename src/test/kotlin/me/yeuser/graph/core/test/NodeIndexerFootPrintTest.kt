@@ -8,13 +8,11 @@ import me.yeuser.graph.core.NodeIndexer
  * Manual Memory FootPrint Test
  */
 fun main() {
-    // Get the Java runtime
     val nodesCount = 1_000_000
 
     val nodeIndexer = NodeIndexer()
 
-    // Run the garbage collector
-    Runtime.getRuntime().gc()
+    gc()
 
     println("Adding Nodes!")
 
@@ -43,9 +41,7 @@ fun main() {
         sumTimeR += time
 
         if ((i1 + 1) % 100_000 == 0) {
-            // Run the garbage collector
-            Runtime.getRuntime().gc()
-            // Hoping garbage collector runs after yield
+            gc()
             printStatistics(addCnt, sumTimeI, "created")
             printStatistics(getCnt, sumTimeR, "read")
             memoryData += printMemory(nodeIndexer.size())
@@ -53,11 +49,8 @@ fun main() {
     }
 
     println("All nodes were indexed!")
-    Thread.yield()
 
-    // Run the garbage collector
-    Runtime.getRuntime().gc()
-
+    gc()
     printStatistics(addCnt, sumTimeI, "created")
     printStatistics(getCnt, sumTimeR, "read")
     memoryData += printMemory(nodeIndexer.size())
@@ -73,7 +66,7 @@ fun main() {
 
     val b = memoryData.map { md -> md.second - a * md.first }.average()
 
-    print("Deducted formula: `memory = ${formatMemory(a)} * nodes + ${formatMemory(b)}`")
+    println("Deducted formula: `memory = ${formatMemory(a)} * nodes + ${formatMemory(b)}`")
 }
 
 private fun printStatistics(cnt: Int, sumTime: Long, action: String) {
@@ -82,7 +75,7 @@ private fun printStatistics(cnt: Int, sumTime: Long, action: String) {
 }
 
 private fun printMemory(nodes: Int): NIMemoryDatum {
-    val memory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()
+    val memory = usedMemory()
     println(
         """
     Used memory: ${formatMemory(memory.toDouble())}
