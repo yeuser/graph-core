@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReadWriteLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
-class NodeIndexer(expectedNumberOfNodes: Int) : INodeIndexer {
+class NodeIndexer(expectedNumberOfNodes: Int = 10_000) : INodeIndexer {
     private val lock: ReadWriteLock = ReentrantReadWriteLock()
     private val idx = AtomicInteger(0)
     private val node2idx: Long2IntMap = Long2IntOpenHashMap(expectedNumberOfNodes)

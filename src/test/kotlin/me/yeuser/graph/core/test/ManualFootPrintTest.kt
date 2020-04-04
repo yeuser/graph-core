@@ -66,7 +66,7 @@ fun main() {
         time = System.currentTimeMillis() - time
         sumTimeR += time
 
-        if ((i1 + 1) % 100_000 == 0) {
+        if ((i1 + 1) % 50_000 == 0) {
             // Run the garbage collector
             Runtime.getRuntime().gc()
             Thread.yield()
@@ -88,22 +88,27 @@ fun main() {
     printStatistics(getCnt, sumTimeR, "read")
     memoryData += printMemory(graph.getNodeCount(), graph.getEdgeCount())
 
-    // memory = a * edges + b * nodes + c
+    // memory = a * nodes + b * edges + c
 
     // in general, in all data that we collect, "nodes" remain the same
-    // so we can assume `mem1-mem2` ≈ `a * (edge1-edge2)`
-    val a = memoryData.zipWithNext().filter { (md1, md2) -> md2.second > md1.second }
-        .map { (md1, md2) -> (md2.third - md1.third).toDouble() / (md2.second - md1.second) }.average()
+    // so we can assume `mem1-mem2` ≈ `b * (edge1-edge2)`
+    val b = memoryData.flatMap { md1 -> memoryData.map { md2 -> md2 to md1 } }
+        .filter { (md1, md2) -> md2.second > md1.second && md2.third > md1.third }
+        .map { (md1, md2) -> (md2.third - md1.third).toDouble() / (md2.second - md1.second) }
+        // median
+        .sorted().let { it[it.size / 2] }
 
-    // `memory - a * edges ≈ b * nodes + m0` -> assuming `c ≈ m0`
-    val b = memoryData.map { md ->
-        ((md.third - baseMemoryDatum.third) - a * md.second) /
+    // `memory - b * edges ≈ a * nodes + m0` -> assuming `c ≈ m0`
+    val a = memoryData.map { md ->
+        ((md.third - baseMemoryDatum.third) - b * md.second) /
             (md.first - baseMemoryDatum.first)
-    }.average()
+    }
+        // median
+        .sorted().let { it[it.size / 2] }
 
-    val c = memoryData.map { md -> md.third - a * md.second - b * md.first }.average()
+    val c = memoryData.map { md -> md.third - b * md.second - a * md.first }.average()
 
-    print("Deducted formula: `memory = $a * edges + $b * nodes + $c`")
+    print("Deducted formula: `memory = ${formatMemory(a)} * nodes + ${formatMemory(b)} * edges + ${formatMemory(c)}`")
 }
 
 private fun printStatistics(cnt: Int, sumTime: Long, action: String) {
@@ -115,13 +120,13 @@ private fun printMemory(nodes: Int, edges: Int): MemoryDatum {
     val memory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()
     println(
         """
-    Used memory: ${"%,.2f".format(memory / (1024.0 * 1024.0))}MB
+    Used memory: ${formatMemory(memory.toDouble())}
       #nodes: ${"%,d".format(nodes)} 
       #edges: ${"%,d".format(edges)}
     """.trimIndent()
     )
     if (edges > 0)
-        println("~bytes per edge: ${"%.2f".format(memory.toDouble() / edges)}")
+        println("~used mem per edge: ${formatMemory(memory.toDouble() / edges)}")
     return Triple(nodes, edges, memory)
 }
 typealias MemoryDatum = Triple<Int, Int, Long>
