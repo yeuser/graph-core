@@ -1,8 +1,10 @@
-package me.yeuser.graph.core.test
+package me.yeuser.graph
 
 import kotlin.math.floor
 import kotlin.math.log
 import me.yeuser.graph.core.NodeIndexer
+import me.yeuser.testutil.gc
+import me.yeuser.testutil.usedMemory
 
 /**
  * Manual Memory FootPrint Test
@@ -66,7 +68,9 @@ fun main() {
 
     val b = memoryData.map { md -> md.second - a * md.first }.average()
 
-    println("Deducted formula: `memory = ${formatMemory(a)} * nodes + ${formatMemory(b)}`")
+    println("Deducted formula: `memory = ${formatMemory(a)} * nodes + ${formatMemory(
+        b
+    )}`")
 }
 
 private fun printStatistics(cnt: Int, sumTime: Long, action: String) {

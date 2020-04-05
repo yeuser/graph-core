@@ -1,22 +1,22 @@
-package me.yeuser.graph.core.test
+package me.yeuser.graph
 
 import io.kotest.matchers.shouldBe
 import java.security.SecureRandom
 import java.util.Random
+import me.yeuser.graph.core.Graph
 import me.yeuser.graph.core.GraphEdge
 import me.yeuser.graph.core.GraphEdgeNotFound
-import me.yeuser.graph.core.GraphInMem
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 
-class FunctionalityTester {
+class GraphFunctionalityTester {
 
     @Test
-    fun `test typeWeight in GraphInMem`() {
+    fun `test typeWeight in Graph with primitives`() {
         val typesCount = 0xFF
         val precision = 0xFFFF / typesCount
-        val graphInMem = GraphInMem(100, precision, *(1..typesCount).map { "type-$it" }.toTypedArray())
+        val graphInMem = Graph.createWithPrimitiveArrays(precision, *(1..typesCount).map { "type-$it" }.toTypedArray())
         val random = SecureRandom()
         val weight1 = (1).toDouble() / precision
         val type1 = "type-1"
@@ -33,8 +33,8 @@ class FunctionalityTester {
     }
 
     @Test
-    fun `test edge removal at GraphInMem`() {
-        val graphInMem = GraphInMem(100, 100, "A", "B", "C")
+    fun `test edge removal at Graph with primitives`() {
+        val graphInMem = Graph.createWithPrimitiveArrays(100, "A", "B", "C")
         val (from, to) = 1L to 2L
         graphInMem.addEdge(from, to, "A", 0.5, true)
         graphInMem.removeEdge(from, to, false)
@@ -55,7 +55,7 @@ class FunctionalityTester {
     @Test
     fun testFunctionality() {
         val random = Random()
-        val graph = GraphInMem(100, 100, "A", "B", "C")
+        val graph = Graph.createWithPrimitiveArrays(100, "A", "B", "C")
         val nodeEdges = (0 until 10).associateWith { i ->
             (0 until 10).filter { j ->
                 i != j && random.nextBoolean()
@@ -82,7 +82,7 @@ class FunctionalityTester {
     @Test
     fun testFunctionalityBidirectional() {
         val random = Random()
-        val graph = GraphInMem(100, 100, "A", "B", "C")
+        val graph = Graph.createWithPrimitiveArrays(100, "A", "B", "C")
         val nodeEdges = (0 until 9).associateWith { (it + 1 until 10).filter { random.nextBoolean() } }
 
         val nodes = random.longs(10).toArray()

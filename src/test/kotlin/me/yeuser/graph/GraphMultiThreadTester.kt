@@ -1,4 +1,4 @@
-package me.yeuser.graph.core.test
+package me.yeuser.graph
 
 import java.util.Random
 import kotlinx.coroutines.GlobalScope
@@ -6,14 +6,14 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import me.yeuser.graph.core.GraphInMem
+import me.yeuser.graph.core.Graph
 import org.junit.jupiter.api.Test
 
-class MultiThreadTester {
+class GraphMultiThreadTester {
 
     @Test
     fun testFunctionalityMultiThreaded() {
-        val graph = GraphInMem(100, 100, "A", "B", "C")
+        val graph = Graph.createWithPrimitiveArrays(100, "A", "B", "C")
         val nodeEdges = arrayOf(
             0 to arrayOf(1, 2),
             1 to arrayOf(3, 4, 5),

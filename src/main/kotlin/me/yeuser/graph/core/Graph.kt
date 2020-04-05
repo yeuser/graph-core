@@ -1,25 +1,67 @@
 package me.yeuser.graph.core
 
-import java.lang.Exception
+import me.yeuser.graph.impl.primitivearray.EdgeIndexer
 
-interface Graph<T : Comparable<T>> {
+class Graph<T> private constructor(private val edgeIndexer: IEdgeIndexer<T>) {
 
-    fun getNodeCount(): Int
+    companion object {
+        fun <T> createWithPrimitiveArrays(precision: Int, vararg edgeTypes: T): Graph<T> =
+            Graph(EdgeIndexer<T>(precision, *edgeTypes))
+    }
 
-    fun getEdgeCount(): Int
+    private val nodeIndexer = NodeIndexer()
 
-    fun addEdge(from: Long, to: Long, type: T, weight: Double, biDirectional: Boolean)
+    fun addEdge(
+        from: Long,
+        to: Long,
+        type: T,
+        weight: Double,
+        biDirectional: Boolean
+    ) {
+        assert(weight > 0 && weight <= 1) {
+            "Weight value of an edge must always be in range (0,1]."
+        }
+        val fromIdx = nodeIndexer.indexOf(from)
+        val toIdx = nodeIndexer.indexOf(to)
+        this.edgeIndexer.addEdge(fromIdx, toIdx, type, weight, biDirectional)
+    }
 
-    fun removeEdge(from: Long, to: Long, biDirectional: Boolean)
+    fun removeEdge(
+        from: Long,
+        to: Long,
+        biDirectional: Boolean
+    ) {
+        val fromIdx = nodeIndexer.indexOf(from)
+        val toIdx = nodeIndexer.indexOf(to)
+        this.edgeIndexer.removeEdge(fromIdx, toIdx, biDirectional)
+    }
 
-    fun getEdge(from: Long, to: Long): GraphEdge<T>
+    fun getEdge(from: Long, to: Long): GraphEdge<T> {
+        val fromIdx = nodeIndexer.indexOf(from)
+        val toIdx = nodeIndexer.indexOf(to)
+        val edge = this.edgeIndexer.getEdge(fromIdx, toIdx) ?: throw GraphEdgeNotFound(from, to)
+        return GraphEdge(from, to, edge.type, edge.weight)
+    }
 
     fun getEdgeConnections(
         from: Long,
         type: T? = null,
         minWeight: Double = 0.0,
         maxWeight: Double = 1.0
-    ): Sequence<GraphEdge<T>>
+    ): Sequence<GraphEdge<T>> {
+        val fromIdx = nodeIndexer.indexOf(from)
+        return edgeIndexer.getConnections(fromIdx, type)
+            .filter { edge -> edge.weight in minWeight..maxWeight }
+            .map { GraphEdge(from, nodeIndexer.fromIndex(it.toIdx), it.type, it.weight) }
+    }
+
+    fun getNodeCount(): Int {
+        return nodeIndexer.size()
+    }
+
+    fun getEdgeCount(): Int {
+        return this.edgeIndexer.getEdgeCount()
+    }
 }
 
 data class GraphEdge<T> internal constructor(
@@ -30,3 +72,21 @@ data class GraphEdge<T> internal constructor(
 )
 
 class GraphEdgeNotFound(val from: Long, val to: Long) : Exception("Graph has no edge from $from to $to.")
+
+interface IEdgeIndexer<T> {
+    fun addEdge(fromIdx: Int, toIdx: Int, type: T, weight: Double, biDirectional: Boolean)
+    fun removeEdge(fromIdx: Int, toIdx: Int, biDirectional: Boolean)
+    fun getEdge(fromIdx: Int, toIdx: Int): Edge<T>?
+    fun getConnections(fromIdx: Int, type: T? = null): Sequence<Edge<T>>
+    fun getEdgeCount(): Int
+}
+
+typealias TypeWeight<T> = Pair<T, Double>
+
+data class Edge<T>(val fromIdx: Int, val toIdx: Int, val type: T, val weight: Double)
+
+interface INodeIndexer {
+    fun indexOf(node: Long): Int
+    fun fromIndex(index: Int): Long
+    fun size(): Int
+}

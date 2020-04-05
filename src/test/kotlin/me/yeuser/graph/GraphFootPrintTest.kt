@@ -1,8 +1,10 @@
-package me.yeuser.graph.core.test
+package me.yeuser.graph
 
 import java.security.SecureRandom
 import kotlin.streams.asSequence
-import me.yeuser.graph.core.GraphInMem
+import me.yeuser.graph.core.Graph
+import me.yeuser.testutil.gc
+import me.yeuser.testutil.usedMemory
 
 /**
  * Manual Memory FootPrint Test
@@ -12,7 +14,7 @@ fun main() {
     val edgesCount = nodesCount * 100
     val random = SecureRandom()
     val edgeTypes = arrayOf("A", "M", "E")
-    val graph = GraphInMem(nodesCount, 100, *edgeTypes)
+    val graph = Graph.createWithPrimitiveArrays(100, *edgeTypes)
 
     println("Preparing Nodes..")
     val nodes = random.longs().asSequence().distinct().take(nodesCount).toList()
@@ -99,7 +101,9 @@ fun main() {
 
     val c = memoryData.map { md -> md.third - b * md.second - a * md.first }.average()
 
-    println("Deducted formula: `memory = ${formatMemory(a)} * nodes + ${formatMemory(b)} * edges + ${formatMemory(c)}`")
+    println("Deducted formula: `memory = ${formatMemory(a)} * nodes + ${formatMemory(
+        b
+    )} * edges + ${formatMemory(c)}`")
 }
 
 private fun printStatistics(cnt: Int, sumTime: Long, action: String) {

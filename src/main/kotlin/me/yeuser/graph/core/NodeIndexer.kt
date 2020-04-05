@@ -8,13 +8,13 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReadWriteLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
-class NodeIndexer(expectedNumberOfNodes: Int = 10_000) : INodeIndexer {
+class NodeIndexer(expectedNumberOfNodes: Int = 10_000) {
     private val lock: ReadWriteLock = ReentrantReadWriteLock()
     private val idx = AtomicInteger(0)
     private val node2idx: Long2IntMap = Long2IntOpenHashMap(expectedNumberOfNodes)
     private val idx2node: LongList = LongArrayList(expectedNumberOfNodes)
 
-    override fun indexOf(node: Long): Int {
+    fun indexOf(node: Long): Int {
         lock.readLock().lock()
         val pos = node2idx.getOrDefault(node, -1)
         lock.readLock().unlock()
@@ -31,14 +31,14 @@ class NodeIndexer(expectedNumberOfNodes: Int = 10_000) : INodeIndexer {
         return idx
     }
 
-    override fun fromIndex(index: Int): Long {
+    fun fromIndex(index: Int): Long {
         lock.readLock().lock()
         val node = idx2node.getLong(index)
         lock.readLock().unlock()
         return node
     }
 
-    override fun size(): Int {
+    fun size(): Int {
         return idx2node.size
     }
 }

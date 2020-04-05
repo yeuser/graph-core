@@ -1,8 +1,9 @@
-package me.yeuser.graph.core.test
+package me.yeuser.graph.impl.primitivearray
 
 import java.util.Random
 import kotlin.streams.asSequence
-import me.yeuser.graph.core.BigInt2Short
+import me.yeuser.testutil.gc
+import me.yeuser.testutil.usedMemory
 
 fun main() {
     val random = Random()

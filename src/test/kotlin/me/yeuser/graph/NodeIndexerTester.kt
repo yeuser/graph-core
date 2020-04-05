@@ -1,4 +1,4 @@
-package me.yeuser.graph.core.test
+package me.yeuser.graph
 
 import java.util.Random
 import kotlin.streams.asSequence

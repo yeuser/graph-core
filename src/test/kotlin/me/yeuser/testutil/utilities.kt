@@ -1,4 +1,4 @@
-package me.yeuser.graph.core.test
+package me.yeuser.testutil
 
 import java.lang.management.ManagementFactory
 import java.lang.management.MemoryType

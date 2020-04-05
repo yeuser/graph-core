@@ -1,10 +1,8 @@
-package me.yeuser.graph.core.test
+package me.yeuser.graph.impl.primitivearray
 
 import java.util.Random
-import kotlin.streams.asSequence
 import kotlin.streams.toList
 import kotlin.test.assertEquals
-import me.yeuser.graph.core.BigInt2Short
 import org.junit.jupiter.api.Test
 
 class BigInt2ShortTester {

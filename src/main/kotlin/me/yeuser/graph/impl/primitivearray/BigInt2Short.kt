@@ -1,13 +1,12 @@
-package me.yeuser.graph.core
+package me.yeuser.graph.impl.primitivearray
 
-import java.lang.IllegalStateException
+/** -1≈[0xFFFF in short] is the highest unsigned value and is reserved for this flag */
+private const val REMOVE_FLAG = (-1).toShort()
 
-typealias Int2ShortBlock = Pair<IntArray, ShortArray>
+private typealias Int2ShortBlock = Pair<IntArray, ShortArray>
+private typealias BlockIndicesValue = Triple<Int, Int, Short>
 
-const val REMOVE_FLAG =
-    (-1).toShort() // -1≈[0xFFFF in short] is the highest unsigned value and is reserved for this flag
-
-class BigInt2Short(
+internal class BigInt2Short(
     private val blockSize: Int = 4096 // 4k memory blocks
 ) {
 
@@ -15,19 +14,10 @@ class BigInt2Short(
 
     fun addAll(i2sMap: Map<Int, Short>) {
         val list = i2sMap.entries.sortedBy { it.key }
-        addAll(Int2ShortBlock(list.map { it.key }.toIntArray(), list.map { it.value }.toShortArray()))
+        insert(Int2ShortBlock(list.map { it.key }.toIntArray(), list.map { it.value }.toShortArray()))
     }
 
-    fun removeAll(keys: Iterable<Int>) {
-        val finds = findSortedArr(keys.sorted().toIntArray())
-
-        // Overwrite the weights with REMOVE_FLAG (-1≈[0xFFFF in short])
-        finds.filterNotNull().forEach { (idx, i, _) ->
-            blocks[idx].second[i] = REMOVE_FLAG
-        }
-    }
-
-    private fun addAll(i2sBlock: Int2ShortBlock) {
+    private fun insert(i2sBlock: Int2ShortBlock) {
         assert(i2sBlock.second.none { it == REMOVE_FLAG }) { "Short value '-1≈[0xFFFF]' is reserved for REMOVE_FLAG" }
 
         val inArr = i2sBlock.first
@@ -55,7 +45,8 @@ class BigInt2Short(
     private fun appendToLastBlock(addition: Int2ShortBlock) {
         val lastBlock = blocks.last()
         val len = lastBlock.first.size + addition.first.size
-        val retBlock = Int2ShortBlock(IntArray(len), ShortArray(len))
+        val retBlock =
+            Int2ShortBlock(IntArray(len), ShortArray(len))
         var i = 0 // lastBlock
         var j = 0 // addition
         while (i + j < len) {
@@ -84,10 +75,21 @@ class BigInt2Short(
             blocks.indices.forEach { idx ->
                 val (keys, values) = blocks[idx]
                 blocks[idx] = Int2ShortBlock(
-                    keys.filterIndexed { i, _ -> values[i] != REMOVE_FLAG }.toIntArray(),
-                    values.filter { it != REMOVE_FLAG }.toShortArray()
+                    keys.filterIndexed { i, _ -> values[i] != REMOVE_FLAG }
+                        .toIntArray(),
+                    values.filter { it != REMOVE_FLAG }
+                        .toShortArray()
                 )
             }
+        }
+    }
+
+    fun removeAll(keys: Iterable<Int>) {
+        val finds = findSortedArr(keys.sorted().toIntArray())
+
+        // Overwrite the weights with REMOVE_FLAG (-1≈[0xFFFF in short])
+        finds.filterNotNull().forEach { (idx, i, _) ->
+            blocks[idx].second[i] = REMOVE_FLAG
         }
     }
 
@@ -130,13 +132,21 @@ class BigInt2Short(
             while (q - p > 7) {
                 val i = (p + q) / 2
                 when {
-                    arr[i] == k -> return BlockIndicesValue(idx, i, vs[i])
+                    arr[i] == k -> return BlockIndicesValue(
+                        idx,
+                        i,
+                        vs[i]
+                    )
                     arr[i] > k -> q = i
                     arr[i] < k -> p = i
                 }
             }
             for (i in p..q) {
-                if (arr[i] == k) return BlockIndicesValue(idx, i, vs[i])
+                if (arr[i] == k) return BlockIndicesValue(
+                    idx,
+                    i,
+                    vs[i]
+                )
             }
         }
         return null
@@ -152,5 +162,3 @@ class BigInt2Short(
 
     val dirtyCells: Int get() = blocks.sumBy { it.second.count { it == REMOVE_FLAG } }
 }
-
-typealias BlockIndicesValue = Triple<Int, Int, Short>
