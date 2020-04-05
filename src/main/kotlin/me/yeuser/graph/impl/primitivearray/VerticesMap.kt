@@ -1,38 +1,39 @@
-package me.yeuser.graph.core
+package me.yeuser.graph.impl.primitivearray
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.ints.Int2ShortAVLTreeMap
-import java.util.concurrent.locks.ReadWriteLock
-import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.math.max
 import kotlin.math.min
 
-class VerticesMap(
+internal class VerticesMap(
     private val bufferOpsLimit: Int = 8 * 1024,
     private val nodeEdgeExpansionMax: Int = 1024 * 1024,
     private val nodeEdgeExpansionMin: Int = 1024
 ) {
 
-    private val lock: ReadWriteLock = ReentrantReadWriteLock()
     private val vertices: Int2ObjectOpenHashMap<MutableMap<Int, Short>> = Int2ObjectOpenHashMap(32 * 1024, 1f)
     private var verticesCompact: Array<BigInt2Short?> = emptyArray()
     private var cOps = 0
 
     fun add(fromIdx: Int, toIdx: Int, value: Short) {
-        lock.writeLock().lock()
         vertices.computeIfAbsent(fromIdx) { Int2ShortAVLTreeMap() }[toIdx] = value
-        lock.writeLock().unlock()
+        shrink()
+    }
+
+    fun remove(fromIdx: Int, toIdx: Int) {
+        vertices.computeIfPresent(fromIdx) { _, map -> map.remove(toIdx); map }
+        verticesCompact.getOrNull(fromIdx)
+            ?.takeIf { it.has(toIdx) }
+            ?.addAll(mapOf(toIdx to (-1).toShort()))
         shrink()
     }
 
     private fun shrink(force: Boolean = false) {
-        lock.writeLock().lock()
         cOps++
         if (force || cOps > bufferOpsLimit) {
             compress()
             cOps = 0
         }
-        lock.writeLock().unlock()
     }
 
     private fun compress() {
@@ -54,42 +55,25 @@ class VerticesMap(
         vertices.clear()
     }
 
-    fun get(fromIdx: Int): Iterable<Pair<Int, Short>>? {
-        lock.readLock().lock()
-        val rbTreeSet = listOfNotNull(
-            vertices.get(fromIdx)?.asIterable()?.map { it.toPair() },
-            verticesCompact
-                .takeIf { it.size > fromIdx }
+    fun get(fromIdx: Int): Sequence<Pair<Int, Short>>? {
+        val rbTreeSet = sequenceOf(
+            vertices.get(fromIdx)?.asSequence()?.map { it.toPair() },
+            verticesCompact.takeIf { it.size > fromIdx }
                 ?.get(fromIdx)
                 ?.asSequence()
-                ?.asIterable()
-        ).flatten()
-        lock.readLock().unlock()
+        ).flatMap { it?.asSequence().orEmpty() }
         shrink()
-        return rbTreeSet.takeUnless { it.isEmpty() }
+        return rbTreeSet.takeIf { it.any() }
     }
 
     fun get(fromIdx: Int, toIdx: Int): Short? {
-        lock.readLock().lock()
         val value = vertices[fromIdx]?.get(toIdx)
             ?: verticesCompact.getOrNull(fromIdx)?.getValue(toIdx)
-        lock.readLock().unlock()
         return value
     }
 
-    fun has(fromIdx: Int, toIdx: Int): Boolean {
-        lock.readLock().lock()
-        val found = vertices[fromIdx]?.contains(toIdx) == true ||
-            fromIdx < verticesCompact.size && verticesCompact[fromIdx]?.has(toIdx) == true
-        lock.readLock().unlock()
-        return found
-    }
-
     fun size(): Int {
-        shrink(true)
-        lock.readLock().lock()
-        val size = verticesCompact.sumBy { it?.size ?: 0 }
-        lock.readLock().unlock()
-        return size
+        shrink(force = true)
+        return verticesCompact.sumBy { it?.size ?: 0 }
     }
 }
