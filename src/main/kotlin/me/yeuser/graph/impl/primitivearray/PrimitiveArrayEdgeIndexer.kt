@@ -2,7 +2,8 @@ package me.yeuser.graph.impl.primitivearray
 
 import me.yeuser.graph.core.AbstractEdgeIndexer
 
-class EdgeIndexer<T>(precision: Int, vararg edgeTypes: T) : AbstractEdgeIndexer<T>(precision, *edgeTypes) {
+class PrimitiveArrayEdgeIndexer<T>(precision: Int, vararg edgeTypes: T) :
+    AbstractEdgeIndexer<T>(precision, *edgeTypes) {
 
     private val edges = VerticesMap()
 

@@ -1,12 +1,16 @@
 package me.yeuser.graph.core
 
-import me.yeuser.graph.impl.primitivearray.EdgeIndexer
+import me.yeuser.graph.impl.fastmap.FastMapEdgeIndexer
+import me.yeuser.graph.impl.primitivearray.PrimitiveArrayEdgeIndexer
 
 class Graph<T> private constructor(private val edgeIndexer: IEdgeIndexer<T>) {
 
     companion object {
         fun <T> createWithPrimitiveArrays(precision: Int, vararg edgeTypes: T): Graph<T> =
-            Graph(EdgeIndexer<T>(precision, *edgeTypes))
+            Graph(PrimitiveArrayEdgeIndexer(precision, *edgeTypes))
+
+        fun <T> createWithFastMap(precision: Int, vararg edgeTypes: T): Graph<T> =
+            Graph(FastMapEdgeIndexer(10_000, precision, *edgeTypes))
     }
 
     private val nodeIndexer = NodeIndexer()

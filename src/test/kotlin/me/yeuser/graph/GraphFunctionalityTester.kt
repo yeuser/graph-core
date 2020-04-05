@@ -16,94 +16,120 @@ class GraphFunctionalityTester {
     fun `test typeWeight in Graph with primitives`() {
         val typesCount = 0xFF
         val precision = 0xFFFF / typesCount
-        val graphInMem = Graph.createWithPrimitiveArrays(precision, *(1..typesCount).map { "type-$it" }.toTypedArray())
         val random = SecureRandom()
-        val weight1 = (1).toDouble() / precision
-        val type1 = "type-1"
-        graphInMem.addEdge(1L, 2L, type1, weight1, false)
-        val weight2 = (1 + random.nextInt(precision - 1)).toDouble() / precision
-        val type2 = "type-${random.nextInt(typesCount)}"
-        graphInMem.addEdge(2L, 3L, type2, weight2, false)
-        val weight3 = (precision).toDouble() / precision
-        val type3 = "type-$typesCount"
-        graphInMem.addEdge(3L, 4L, type3, weight3, false)
-        graphInMem.getEdge(1L, 2L) shouldBe GraphEdge(1L, 2L, type1, weight1)
-        graphInMem.getEdge(2L, 3L) shouldBe GraphEdge(2L, 3L, type2, weight2)
-        graphInMem.getEdge(3L, 4L) shouldBe GraphEdge(3L, 4L, type3, weight3)
+        val edgeTypes = (1..typesCount).map { "type-$it" }.toTypedArray()
+        for (graph in listOf(
+            Graph.createWithPrimitiveArrays(precision, *edgeTypes),
+            Graph.createWithFastMap(precision, *edgeTypes)
+        )) {
+            val weight1 = (1).toDouble() / precision
+            val type1 = "type-1"
+            graph.addEdge(1L, 2L, type1, weight1, false)
+            val weight2 = (1 + random.nextInt(precision - 1)).toDouble() / precision
+            val type2 = "type-${random.nextInt(typesCount)}"
+            graph.addEdge(2L, 3L, type2, weight2, false)
+            val weight3 = (precision).toDouble() / precision
+            val type3 = "type-$typesCount"
+            graph.addEdge(3L, 4L, type3, weight3, false)
+            graph.getEdge(1L, 2L) shouldBe GraphEdge(1L, 2L, type1, weight1)
+            graph.getEdge(2L, 3L) shouldBe GraphEdge(2L, 3L, type2, weight2)
+            graph.getEdge(3L, 4L) shouldBe GraphEdge(3L, 4L, type3, weight3)
+        }
     }
 
     @Test
     fun `test edge removal at Graph with primitives`() {
-        val graphInMem = Graph.createWithPrimitiveArrays(100, "A", "B", "C")
-        val (from, to) = 1L to 2L
-        graphInMem.addEdge(from, to, "A", 0.5, true)
-        graphInMem.removeEdge(from, to, false)
-        assertThrows<GraphEdgeNotFound> {
-            graphInMem.getEdge(from, to)
-        }
-        assertDoesNotThrow {
-            graphInMem.getEdge(to, from)
-        }
-        assertDoesNotThrow {
-            graphInMem.removeEdge(from, to, true)
-        }
-        assertThrows<GraphEdgeNotFound> {
-            graphInMem.getEdge(to, from)
+        val precision = 100
+        val edgeTypes = arrayOf("A", "B", "C")
+        for (graph in listOf(
+            Graph.createWithPrimitiveArrays(precision, *edgeTypes),
+            Graph.createWithFastMap(precision, *edgeTypes)
+        )) {
+
+            val (from, to) = 1L to 2L
+            graph.addEdge(from, to, "A", 0.5, true)
+            graph.removeEdge(from, to, false)
+            assertThrows<GraphEdgeNotFound> {
+                graph.getEdge(from, to)
+            }
+            assertDoesNotThrow {
+                graph.getEdge(to, from)
+            }
+            assertDoesNotThrow {
+                graph.removeEdge(from, to, true)
+            }
+            assertThrows<GraphEdgeNotFound> {
+                graph.getEdge(to, from)
+            }
         }
     }
 
     @Test
     fun testFunctionality() {
         val random = Random()
-        val graph = Graph.createWithPrimitiveArrays(100, "A", "B", "C")
-        val nodeEdges = (0 until 10).associateWith { i ->
-            (0 until 10).filter { j ->
-                i != j && random.nextBoolean()
+        val precision = 100
+        val edgeTypes = arrayOf("A", "B", "C")
+        for (graph in listOf(
+            Graph.createWithPrimitiveArrays(precision, *edgeTypes),
+            Graph.createWithFastMap(precision, *edgeTypes)
+        )) {
+
+            val nodeEdges = (0 until 10).associateWith { i ->
+                (0 until 10).filter { j ->
+                    i != j && random.nextBoolean()
+                }
             }
-        }
 
-        val nodes = random.longs(10).toArray()
-        val edges =
-            nodeEdges.flatMap { (from, toN) -> toN.map { nodes[from] to nodes[it] } }
-                .associateWith { (random.nextInt(100) + 1) / 100.0 }
+            val nodes = random.longs(10).toArray()
+            val edges =
+                nodeEdges.flatMap { (from, toN) -> toN.map { nodes[from] to nodes[it] } }
+                    .associateWith { (random.nextInt(100) + 1) / 100.0 }
 
-        edges.forEach { (fromTo, weight) ->
-            graph.addEdge(fromTo.first, fromTo.second, "A", weight, false)
-        }
+            edges.forEach { (fromTo, weight) ->
+                graph.addEdge(fromTo.first, fromTo.second, "A", weight, false)
+            }
 
-        nodeEdges.keys.forEach { fromIndex ->
-            val from = nodes[fromIndex]
-            val expected = edges.filter { it.key.first == from }.mapKeys { it.key.second }
-            val actual = graph.getEdgeConnections(from).associate { it.to to it.weight }
-            assert(actual == expected) { "$actual != $expected" }
+            nodeEdges.keys.forEach { fromIndex ->
+                val from = nodes[fromIndex]
+                val expected = edges.filter { it.key.first == from }.mapKeys { it.key.second }
+                val actual = graph.getEdgeConnections(from).associate { it.to to it.weight }
+                assert(actual == expected) { "$actual != $expected" }
+            }
         }
     }
 
     @Test
     fun testFunctionalityBidirectional() {
         val random = Random()
-        val graph = Graph.createWithPrimitiveArrays(100, "A", "B", "C")
-        val nodeEdges = (0 until 9).associateWith { (it + 1 until 10).filter { random.nextBoolean() } }
+        val precision = 100
+        val edgeTypes = arrayOf("A", "B", "C")
+        for (graph in listOf(
+            Graph.createWithPrimitiveArrays(precision, *edgeTypes),
+            Graph.createWithFastMap(precision, *edgeTypes)
+        )) {
 
-        val nodes = random.longs(10).toArray()
-        val edges =
-            nodeEdges.flatMap { (from, toN) -> toN.map { nodes[from] to nodes[it] } }
-                .associateWith { (random.nextInt(100) + 1) / 100.0 }
+            val nodeEdges = (0 until 9).associateWith { (it + 1 until 10).filter { random.nextBoolean() } }
 
-        edges.forEach { (fromTo, weight) ->
-            graph.addEdge(fromTo.first, fromTo.second, "A", weight, true)
-        }
+            val nodes = random.longs(10).toArray()
+            val edges =
+                nodeEdges.flatMap { (from, toN) -> toN.map { nodes[from] to nodes[it] } }
+                    .associateWith { (random.nextInt(100) + 1) / 100.0 }
 
-        nodeEdges.keys.forEach { fromIndex ->
-            val from = nodes[fromIndex]
-            val expected = (
-                edges.filter { it.key.first == from }
-                    .mapKeys { it.key.second }.entries union
-                    edges.filter { it.key.second == from }
-                        .mapKeys { it.key.first }.entries
-                ).associate { it.toPair() }
-            val actual = graph.getEdgeConnections(from).associate { it.to to it.weight }
-            assert(actual == expected) { "$actual != $expected" }
+            edges.forEach { (fromTo, weight) ->
+                graph.addEdge(fromTo.first, fromTo.second, "A", weight, true)
+            }
+
+            nodeEdges.keys.forEach { fromIndex ->
+                val from = nodes[fromIndex]
+                val expected = (
+                    edges.filter { it.key.first == from }
+                        .mapKeys { it.key.second }.entries union
+                        edges.filter { it.key.second == from }
+                            .mapKeys { it.key.first }.entries
+                    ).associate { it.toPair() }
+                val actual = graph.getEdgeConnections(from).associate { it.to to it.weight }
+                assert(actual == expected) { "$actual != $expected" }
+            }
         }
     }
 }

@@ -26,7 +26,7 @@ abstract class AbstractEdgeIndexer<T>(
     protected abstract fun connectionsFrom(fromIdx: Int): Sequence<Pair<Int, Short>>?
     protected abstract fun size(): Int
 
-    override fun addEdge(
+    final override fun addEdge(
         fromIdx: Int,
         toIdx: Int,
         type: T,
@@ -42,7 +42,7 @@ abstract class AbstractEdgeIndexer<T>(
         }
     }
 
-    override fun removeEdge(
+    final override fun removeEdge(
         fromIdx: Int,
         toIdx: Int,
         biDirectional: Boolean
@@ -58,7 +58,7 @@ abstract class AbstractEdgeIndexer<T>(
         return (t * precision + w).toShort()
     }
 
-    override fun getEdge(fromIdx: Int, toIdx: Int): Edge<T>? =
+    final override fun getEdge(fromIdx: Int, toIdx: Int): Edge<T>? =
         lock.readLock().withLock {
             valueOf(fromIdx, toIdx)
         }?.let {
@@ -71,7 +71,7 @@ abstract class AbstractEdgeIndexer<T>(
     private fun getWeight(typeWeight: Short) =
         ((typeWeight.toInt() and 0xFFFF) % precision + 1.0) / precision
 
-    override fun getConnections(fromIdx: Int, type: T?): Sequence<Edge<T>> {
+    final override fun getConnections(fromIdx: Int, type: T?): Sequence<Edge<T>> {
         val edgeType = type?.let { edgeTypes.indexOfFirst { it == type } }
         assert(edgeType != -1) { "Given `type` ($type) is unknown!" }
         return lock.readLock().withLock {
@@ -83,5 +83,5 @@ abstract class AbstractEdgeIndexer<T>(
         }.asSequence()
     }
 
-    override fun getEdgeCount(): Int = lock.readLock().withLock { size() }
+    final override fun getEdgeCount(): Int = lock.readLock().withLock { size() }
 }

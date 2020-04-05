@@ -1,9 +1,7 @@
 package me.yeuser.graph.impl.primitivearray
 
 import java.util.Random
-import me.yeuser.graph.impl.primitivearray.VerticesMap
 import org.junit.jupiter.api.Test
-import me.yeuser.testutil.*
 
 class VerticesMapTester {
 
