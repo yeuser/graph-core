@@ -24,7 +24,7 @@ internal class VerticesMap(
         vertices.computeIfPresent(fromIdx) { _, map -> map.remove(toIdx); map }
         verticesCompact.getOrNull(fromIdx)
             ?.takeIf { it.has(toIdx) }
-            ?.addAll(mapOf(toIdx to (-1).toShort()))
+            ?.removeAll(listOf(toIdx))
         shrink()
     }
 
@@ -58,9 +58,7 @@ internal class VerticesMap(
     fun get(fromIdx: Int): Sequence<Pair<Int, Short>>? {
         val rbTreeSet = sequenceOf(
             vertices.get(fromIdx)?.asSequence()?.map { it.toPair() },
-            verticesCompact.takeIf { it.size > fromIdx }
-                ?.get(fromIdx)
-                ?.asSequence()
+            verticesCompact.getOrNull(fromIdx)?.asSequence()
         ).flatMap { it?.asSequence().orEmpty() }
         shrink()
         return rbTreeSet.takeIf { it.any() }
