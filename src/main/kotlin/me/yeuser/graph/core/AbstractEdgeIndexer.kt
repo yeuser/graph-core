@@ -24,9 +24,10 @@ abstract class AbstractEdgeIndexer<T>(
     protected abstract fun valueOf(fromIdx: Int, toIdx: Int): Short?
     protected abstract fun del(fromIdx: Int, toIdx: Int)
     protected abstract fun connectionsFrom(fromIdx: Int): Sequence<Pair<Int, Short>>?
+    protected abstract fun connectionsTo(toIdx: Int): Sequence<Pair<Int, Short>>?
     protected abstract fun size(): Int
 
-    final override fun addEdge(
+    final override fun add(
         fromIdx: Int,
         toIdx: Int,
         type: T,
@@ -42,7 +43,7 @@ abstract class AbstractEdgeIndexer<T>(
         }
     }
 
-    final override fun removeEdge(
+    final override fun remove(
         fromIdx: Int,
         toIdx: Int,
         biDirectional: Boolean
@@ -58,7 +59,7 @@ abstract class AbstractEdgeIndexer<T>(
         return (t * precision + w).toShort()
     }
 
-    final override fun getEdge(fromIdx: Int, toIdx: Int): Edge<T>? =
+    final override fun get(fromIdx: Int, toIdx: Int): Edge<T>? =
         lock.readLock().withLock {
             valueOf(fromIdx, toIdx)
         }?.let {
@@ -71,7 +72,7 @@ abstract class AbstractEdgeIndexer<T>(
     private fun getWeight(typeWeight: Short) =
         ((typeWeight.toInt() and 0xFFFF) % precision + 1.0) / precision
 
-    final override fun getConnections(fromIdx: Int, type: T?): Sequence<Edge<T>> {
+    final override fun allFrom(fromIdx: Int, type: T?): Sequence<Edge<T>> {
         val edgeType = type?.let { edgeTypes.indexOfFirst { it == type } }
         assert(edgeType != -1) { "Given `type` ($type) is unknown!" }
         return lock.readLock().withLock {
@@ -83,5 +84,17 @@ abstract class AbstractEdgeIndexer<T>(
         }.asSequence()
     }
 
-    final override fun getEdgeCount(): Int = lock.readLock().withLock { size() }
+    final override fun allTo(toIdx: Int, type: T?): Sequence<Edge<T>> {
+        val edgeType = type?.let { edgeTypes.indexOfFirst { it == type } }
+        assert(edgeType != -1) { "Given `type` ($type) is unknown!" }
+        return lock.readLock().withLock {
+            connectionsTo(toIdx).orEmpty()
+                .run { if (edgeType == null) this else filter { (_, tw) -> getEdgeType(tw) == edgeType } }
+                .map { (fromIdx, typeWeight) ->
+                    Edge(fromIdx, toIdx, edgeTypes[getEdgeType(typeWeight)], getWeight(typeWeight))
+                }
+        }.asSequence()
+    }
+
+    final override fun count(): Int = lock.readLock().withLock { size() }
 }

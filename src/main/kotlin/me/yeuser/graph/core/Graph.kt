@@ -27,7 +27,7 @@ class Graph<T> private constructor(private val edgeIndexer: IEdgeIndexer<T>) {
         }
         val fromIdx = nodeIndexer.indexOf(from)
         val toIdx = nodeIndexer.indexOf(to)
-        this.edgeIndexer.addEdge(fromIdx, toIdx, type, weight, biDirectional)
+        edgeIndexer.add(fromIdx, toIdx, type, weight, biDirectional)
     }
 
     fun removeEdge(
@@ -37,13 +37,13 @@ class Graph<T> private constructor(private val edgeIndexer: IEdgeIndexer<T>) {
     ) {
         val fromIdx = nodeIndexer.indexOf(from)
         val toIdx = nodeIndexer.indexOf(to)
-        this.edgeIndexer.removeEdge(fromIdx, toIdx, biDirectional)
+        edgeIndexer.remove(fromIdx, toIdx, biDirectional)
     }
 
     fun getEdge(from: Long, to: Long): GraphEdge<T> {
         val fromIdx = nodeIndexer.indexOf(from)
         val toIdx = nodeIndexer.indexOf(to)
-        val edge = this.edgeIndexer.getEdge(fromIdx, toIdx) ?: throw GraphEdgeNotFound(from, to)
+        val edge = edgeIndexer.get(fromIdx, toIdx) ?: throw GraphEdgeNotFound(from, to)
         return GraphEdge(from, to, edge.type, edge.weight)
     }
 
@@ -54,7 +54,7 @@ class Graph<T> private constructor(private val edgeIndexer: IEdgeIndexer<T>) {
         maxWeight: Double = 1.0
     ): Sequence<GraphEdge<T>> {
         val fromIdx = nodeIndexer.indexOf(from)
-        return edgeIndexer.getConnections(fromIdx, type)
+        return edgeIndexer.allFrom(fromIdx, type)
             .filter { edge -> edge.weight in minWeight..maxWeight }
             .map { GraphEdge(from, nodeIndexer.fromIndex(it.toIdx), it.type, it.weight) }
     }
@@ -64,7 +64,7 @@ class Graph<T> private constructor(private val edgeIndexer: IEdgeIndexer<T>) {
     }
 
     fun getEdgeCount(): Int {
-        return this.edgeIndexer.getEdgeCount()
+        return edgeIndexer.count()
     }
 }
 
@@ -78,19 +78,12 @@ data class GraphEdge<T> internal constructor(
 class GraphEdgeNotFound(val from: Long, val to: Long) : Exception("Graph has no edge from $from to $to.")
 
 interface IEdgeIndexer<T> {
-    fun addEdge(fromIdx: Int, toIdx: Int, type: T, weight: Double, biDirectional: Boolean)
-    fun removeEdge(fromIdx: Int, toIdx: Int, biDirectional: Boolean)
-    fun getEdge(fromIdx: Int, toIdx: Int): Edge<T>?
-    fun getConnections(fromIdx: Int, type: T? = null): Sequence<Edge<T>>
-    fun getEdgeCount(): Int
+    fun add(fromIdx: Int, toIdx: Int, type: T, weight: Double, biDirectional: Boolean)
+    fun remove(fromIdx: Int, toIdx: Int, biDirectional: Boolean)
+    fun get(fromIdx: Int, toIdx: Int): Edge<T>?
+    fun allFrom(fromIdx: Int, type: T? = null): Sequence<Edge<T>>
+    fun allTo(toIdx: Int, type: T? = null): Sequence<Edge<T>>
+    fun count(): Int
 }
-
-typealias TypeWeight<T> = Pair<T, Double>
 
 data class Edge<T>(val fromIdx: Int, val toIdx: Int, val type: T, val weight: Double)
-
-interface INodeIndexer {
-    fun indexOf(node: Long): Int
-    fun fromIndex(index: Int): Long
-    fun size(): Int
-}

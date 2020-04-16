@@ -16,11 +16,13 @@ class FastMapEdgeIndexer<T>(
 
     private val edgeValues: Long2ShortMap = Long2ShortOpenHashMap(expectedNumberOfEdges, 1f)
     private val edges: Int2ObjectMap<IntSet> = Int2ObjectOpenHashMap(4096, 1f)
+    private val edgesReverse: Int2ObjectMap<IntSet> = Int2ObjectOpenHashMap(4096, 1f)
 
     override fun add(fromIdx: Int, toIdx: Int, value: Short) {
         val fromTo = getFromTo(fromIdx, toIdx)
         edgeValues[fromTo] = value
         edges.computeIfAbsent(fromIdx) { IntRBTreeSet() }.add(toIdx)
+        edgesReverse.computeIfAbsent(toIdx) { IntRBTreeSet() }.add(fromIdx)
     }
 
     override fun valueOf(fromIdx: Int, toIdx: Int): Short? {
@@ -29,12 +31,18 @@ class FastMapEdgeIndexer<T>(
 
     override fun del(fromIdx: Int, toIdx: Int) {
         edges[fromIdx]?.remove(toIdx)
+        edgesReverse[toIdx]?.remove(fromIdx)
         edgeValues.remove(getFromTo(fromIdx, toIdx))
     }
 
     override fun connectionsFrom(fromIdx: Int): Sequence<Pair<Int, Short>>? {
         return edges[fromIdx]?.asSequence()
             ?.map { toIdx -> toIdx to valueOf(fromIdx, toIdx)!! }
+    }
+
+    override fun connectionsTo(toIdx: Int): Sequence<Pair<Int, Short>>? {
+        return edgesReverse[toIdx]?.asSequence()
+            ?.map { fromIdx -> toIdx to valueOf(fromIdx, toIdx)!! }
     }
 
     override fun size(): Int {
