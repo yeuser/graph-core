@@ -26,7 +26,9 @@ class FastMapEdgeIndexer<T>(
     }
 
     override fun valueOf(fromIdx: Int, toIdx: Int): Short? {
-        return edgeValues.get(getFromTo(fromIdx, toIdx))
+        val fromTo = getFromTo(fromIdx, toIdx)
+        if (!edgeValues.containsKey(fromTo)) return null
+        return edgeValues.get(fromTo)
     }
 
     override fun del(fromIdx: Int, toIdx: Int) {
