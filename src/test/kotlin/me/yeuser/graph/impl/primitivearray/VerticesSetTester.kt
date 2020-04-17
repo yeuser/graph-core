@@ -21,5 +21,17 @@ class VerticesSetTester {
             val actual = vertices.get(from)!!.toSet()
             assert(actual == expected) { "$actual != $expected" }
         }
+
+        val nodeEdges2Delete = nodeEdges.mapValues { (_, value) ->
+            value.filter { random.nextBoolean() }
+        }
+
+        nodeEdges2Delete.forEach { (from, toN) -> toN.map { vertices.remove(from, it) } }
+
+        nodeEdges.forEach { (from, tos) ->
+            val expected = tos.minus(nodeEdges2Delete.getValue(from)).toSet()
+            val actual = vertices.get(from)!!.toSet()
+            assert(actual == expected) { "$actual != $expected" }
+        }
     }
 }
