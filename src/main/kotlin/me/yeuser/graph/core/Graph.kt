@@ -90,11 +90,11 @@ data class GraphEdge<T> internal constructor(
 class GraphEdgeNotFound(val from: Long, val to: Long) : Exception("Graph has no edge from $from to $to.")
 
 interface IEdgeIndexer<T> {
-    fun add(fromIdx: Int, toIdx: Int, type: T, weight: Double, biDirectional: Boolean)
-    fun remove(fromIdx: Int, toIdx: Int, biDirectional: Boolean)
-    fun get(fromIdx: Int, toIdx: Int): Edge<T>?
-    fun allFrom(fromIdx: Int, type: T? = null): Sequence<Edge<T>>
-    fun allTo(toIdx: Int, type: T? = null): Sequence<Edge<T>>
+    fun add(from: Int, to: Int, type: T, weight: Double, biDirectional: Boolean)
+    fun remove(from: Int, to: Int, biDirectional: Boolean)
+    fun get(from: Int, to: Int): Edge<T>?
+    fun allFrom(from: Int, type: T? = null): Sequence<Edge<T>>
+    fun allTo(to: Int, type: T? = null): Sequence<Edge<T>>
     fun count(): Int
 }
 

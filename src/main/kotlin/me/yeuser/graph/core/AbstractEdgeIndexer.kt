@@ -20,16 +20,16 @@ abstract class AbstractEdgeIndexer<T>(
     private val lock: ReadWriteLock = ReentrantReadWriteLock()
     private val edgeTypes: List<T> = edgeTypes.map { it }
 
-    protected abstract fun add(fromIdx: Int, toIdx: Int, value: Short)
-    protected abstract fun valueOf(fromIdx: Int, toIdx: Int): Short?
-    protected abstract fun del(fromIdx: Int, toIdx: Int)
-    protected abstract fun connectionsFrom(fromIdx: Int): Sequence<Pair<Int, Short>>?
-    protected abstract fun connectionsTo(toIdx: Int): Sequence<Pair<Int, Short>>?
+    protected abstract fun add(from: Int, to: Int, value: Short)
+    protected abstract fun valueOf(from: Int, to: Int): Short?
+    protected abstract fun del(from: Int, to: Int)
+    protected abstract fun connectionsFrom(from: Int): Sequence<Pair<Int, Short>>?
+    protected abstract fun connectionsTo(to: Int): Sequence<Pair<Int, Short>>?
     protected abstract fun size(): Int
 
     final override fun add(
-        fromIdx: Int,
-        toIdx: Int,
+        from: Int,
+        to: Int,
         type: T,
         weight: Double,
         biDirectional: Boolean
@@ -38,19 +38,19 @@ abstract class AbstractEdgeIndexer<T>(
         assert(edgeType >= 0) { "Given `type` is unknown!" }
         val typeWeight = getTypeWeight(edgeType, weight)
         lock.writeLock().withLock {
-            add(fromIdx, toIdx, typeWeight)
-            if (biDirectional) add(toIdx, fromIdx, typeWeight)
+            add(from, to, typeWeight)
+            if (biDirectional) add(to, from, typeWeight)
         }
     }
 
     final override fun remove(
-        fromIdx: Int,
-        toIdx: Int,
+        from: Int,
+        to: Int,
         biDirectional: Boolean
     ) {
         lock.writeLock().withLock {
-            del(fromIdx, toIdx)
-            if (biDirectional) del(toIdx, fromIdx)
+            del(from, to)
+            if (biDirectional) del(to, from)
         }
     }
 
@@ -59,11 +59,11 @@ abstract class AbstractEdgeIndexer<T>(
         return (t * precision + w).toShort()
     }
 
-    final override fun get(fromIdx: Int, toIdx: Int): Edge<T>? =
+    final override fun get(from: Int, to: Int): Edge<T>? =
         lock.readLock().withLock {
-            valueOf(fromIdx, toIdx)
+            valueOf(from, to)
         }?.let {
-            Edge(fromIdx, toIdx, edgeTypes[getEdgeType(it)], getWeight(it))
+            Edge(from, to, edgeTypes[getEdgeType(it)], getWeight(it))
         }
 
     private fun getEdgeType(typeWeight: Short) =
@@ -72,26 +72,26 @@ abstract class AbstractEdgeIndexer<T>(
     private fun getWeight(typeWeight: Short) =
         ((typeWeight.toInt() and 0xFFFF) % precision + 1.0) / precision
 
-    final override fun allFrom(fromIdx: Int, type: T?): Sequence<Edge<T>> {
+    final override fun allFrom(from: Int, type: T?): Sequence<Edge<T>> {
         val edgeType = type?.let { edgeTypes.indexOfFirst { it == type } }
         assert(edgeType != -1) { "Given `type` ($type) is unknown!" }
         return lock.readLock().withLock {
-            connectionsFrom(fromIdx).orEmpty()
+            connectionsFrom(from).orEmpty()
                 .run { if (edgeType == null) this else filter { (_, tw) -> getEdgeType(tw) == edgeType } }
-                .map { (toIdx, typeWeight) ->
-                    Edge(fromIdx, toIdx, edgeTypes[getEdgeType(typeWeight)], getWeight(typeWeight))
+                .map { (to, typeWeight) ->
+                    Edge(from, to, edgeTypes[getEdgeType(typeWeight)], getWeight(typeWeight))
                 }
         }.asSequence()
     }
 
-    final override fun allTo(toIdx: Int, type: T?): Sequence<Edge<T>> {
+    final override fun allTo(to: Int, type: T?): Sequence<Edge<T>> {
         val edgeType = type?.let { edgeTypes.indexOfFirst { it == type } }
         assert(edgeType != -1) { "Given `type` ($type) is unknown!" }
         return lock.readLock().withLock {
-            connectionsTo(toIdx).orEmpty()
+            connectionsTo(to).orEmpty()
                 .run { if (edgeType == null) this else filter { (_, tw) -> getEdgeType(tw) == edgeType } }
-                .map { (fromIdx, typeWeight) ->
-                    Edge(fromIdx, toIdx, edgeTypes[getEdgeType(typeWeight)], getWeight(typeWeight))
+                .map { (from, typeWeight) ->
+                    Edge(from, to, edgeTypes[getEdgeType(typeWeight)], getWeight(typeWeight))
                 }
         }.asSequence()
     }

@@ -18,40 +18,40 @@ class FastMapEdgeIndexer<T>(
     private val edges: Int2ObjectMap<IntSet> = Int2ObjectOpenHashMap(4096, 1f)
     private val edgesReverse: Int2ObjectMap<IntSet> = Int2ObjectOpenHashMap(4096, 1f)
 
-    override fun add(fromIdx: Int, toIdx: Int, value: Short) {
-        val fromTo = getFromTo(fromIdx, toIdx)
+    override fun add(from: Int, to: Int, value: Short) {
+        val fromTo = getFromTo(from, to)
         edgeValues[fromTo] = value
-        edges.computeIfAbsent(fromIdx) { IntRBTreeSet() }.add(toIdx)
-        edgesReverse.computeIfAbsent(toIdx) { IntRBTreeSet() }.add(fromIdx)
+        edges.computeIfAbsent(from) { IntRBTreeSet() }.add(to)
+        edgesReverse.computeIfAbsent(to) { IntRBTreeSet() }.add(from)
     }
 
-    override fun valueOf(fromIdx: Int, toIdx: Int): Short? {
-        val fromTo = getFromTo(fromIdx, toIdx)
+    override fun valueOf(from: Int, to: Int): Short? {
+        val fromTo = getFromTo(from, to)
         if (!edgeValues.containsKey(fromTo)) return null
         return edgeValues.get(fromTo)
     }
 
-    override fun del(fromIdx: Int, toIdx: Int) {
-        edges[fromIdx]?.remove(toIdx)
-        edgesReverse[toIdx]?.remove(fromIdx)
-        edgeValues.remove(getFromTo(fromIdx, toIdx))
+    override fun del(from: Int, to: Int) {
+        edges[from]?.remove(to)
+        edgesReverse[to]?.remove(from)
+        edgeValues.remove(getFromTo(from, to))
     }
 
-    override fun connectionsFrom(fromIdx: Int): Sequence<Pair<Int, Short>>? {
-        return edges[fromIdx]?.asSequence()
-            ?.map { toIdx -> toIdx to valueOf(fromIdx, toIdx)!! }
+    override fun connectionsFrom(from: Int): Sequence<Pair<Int, Short>>? {
+        return edges[from]?.asSequence()
+            ?.map { to -> to to valueOf(from, to)!! }
     }
 
-    override fun connectionsTo(toIdx: Int): Sequence<Pair<Int, Short>>? {
-        return edgesReverse[toIdx]?.asSequence()
-            ?.map { fromIdx -> fromIdx to valueOf(fromIdx, toIdx)!! }
+    override fun connectionsTo(to: Int): Sequence<Pair<Int, Short>>? {
+        return edgesReverse[to]?.asSequence()
+            ?.map { from -> from to valueOf(from, to)!! }
     }
 
     override fun size(): Int {
         return edges.size
     }
 
-    private fun getFromTo(fromIdx: Int, toIdx: Int): Long {
-        return fromIdx.toLong() and 0xFFFFFFFFL shl 32 or (toIdx.toLong() and 0xFFFFFFFFL)
+    private fun getFromTo(from: Int, to: Int): Long {
+        return from.toLong() and 0xFFFFFFFFL shl 32 or (to.toLong() and 0xFFFFFFFFL)
     }
 }

@@ -8,22 +8,22 @@ class PrimitiveArrayEdgeIndexer<T>(precision: Int, vararg edgeTypes: T) :
     private val edges = VerticesMap()
     private val edgesReverse = VerticesSet()
 
-    override fun add(fromIdx: Int, toIdx: Int, value: Short) {
-        edges.add(fromIdx, toIdx, value)
-        edgesReverse.add(toIdx, fromIdx)
+    override fun add(from: Int, to: Int, value: Short) {
+        edges.add(from, to, value)
+        edgesReverse.add(to, from)
     }
 
-    override fun valueOf(fromIdx: Int, toIdx: Int): Short? = edges.get(fromIdx, toIdx)
+    override fun valueOf(from: Int, to: Int): Short? = edges.get(from, to)
 
-    override fun del(fromIdx: Int, toIdx: Int) {
-        edges.remove(fromIdx, toIdx)
-        edgesReverse.remove(toIdx, fromIdx)
+    override fun del(from: Int, to: Int) {
+        edges.remove(from, to)
+        edgesReverse.remove(to, from)
     }
 
-    override fun connectionsFrom(fromIdx: Int): Sequence<Pair<Int, Short>>? = edges.get(fromIdx)
+    override fun connectionsFrom(from: Int): Sequence<Pair<Int, Short>>? = edges.get(from)
 
-    override fun connectionsTo(toIdx: Int): Sequence<Pair<Int, Short>>? =
-        edgesReverse.get(toIdx)?.map { it to valueOf(it, toIdx)!! }
+    override fun connectionsTo(to: Int): Sequence<Pair<Int, Short>>? =
+        edgesReverse.get(to)?.map { it to valueOf(it, to)!! }
 
     override fun size(): Int = edges.size()
 }
