@@ -92,7 +92,14 @@ class GraphFunctionalityTester {
             nodeEdges.keys.forEach { fromIndex ->
                 val from = nodes[fromIndex]
                 val expected = edges.filter { it.key.first == from }.mapKeys { it.key.second }
-                val actual = graph.getEdgeConnections(from).associate { it.to to it.weight }
+                val actual = graph.getEdgeConnectionsFrom(from).associate { it.to to it.weight }
+                assert(actual == expected) { "$actual != $expected" }
+            }
+
+            nodeEdges.values.flatten().toSet().forEach { toIndex ->
+                val to = nodes[toIndex]
+                val expected = edges.filter { it.key.second == to }.mapKeys { it.key.first }
+                val actual = graph.getEdgeConnectionsTo(to).associate { it.from to it.weight }
                 assert(actual == expected) { "$actual != $expected" }
             }
         }
@@ -127,8 +134,11 @@ class GraphFunctionalityTester {
                         edges.filter { it.key.second == from }
                             .mapKeys { it.key.first }.entries
                     ).associate { it.toPair() }
-                val actual = graph.getEdgeConnections(from).associate { it.to to it.weight }
+                val actual = graph.getEdgeConnectionsFrom(from).associate { it.to to it.weight }
                 assert(actual == expected) { "$actual != $expected" }
+
+                val actualRev = graph.getEdgeConnectionsTo(from).associate { it.from to it.weight }
+                assert(actualRev == expected) { "$actualRev != $expected" }
             }
         }
     }

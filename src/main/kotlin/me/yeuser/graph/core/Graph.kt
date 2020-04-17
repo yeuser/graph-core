@@ -47,7 +47,7 @@ class Graph<T> private constructor(private val edgeIndexer: IEdgeIndexer<T>) {
         return GraphEdge(from, to, edge.type, edge.weight)
     }
 
-    fun getEdgeConnections(
+    fun getEdgeConnectionsFrom(
         from: Long,
         type: T? = null,
         minWeight: Double = 0.0,
@@ -57,6 +57,18 @@ class Graph<T> private constructor(private val edgeIndexer: IEdgeIndexer<T>) {
         return edgeIndexer.allFrom(fromIdx, type)
             .filter { edge -> edge.weight in minWeight..maxWeight }
             .map { GraphEdge(from, nodeIndexer.fromIndex(it.toIdx), it.type, it.weight) }
+    }
+
+    fun getEdgeConnectionsTo(
+        to: Long,
+        type: T? = null,
+        minWeight: Double = 0.0,
+        maxWeight: Double = 1.0
+    ): Sequence<GraphEdge<T>> {
+        val toIdx = nodeIndexer.indexOf(to)
+        return edgeIndexer.allTo(toIdx, type)
+            .filter { edge -> edge.weight in minWeight..maxWeight }
+            .map { GraphEdge(nodeIndexer.fromIndex(it.fromIdx), to, it.type, it.weight) }
     }
 
     fun getNodeCount(): Int {
