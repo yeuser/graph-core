@@ -1,6 +1,6 @@
-package me.yeuser.graph.impl.primitivearray
+package me.yeuser.graph.blocks.primitivearray
 
-import me.yeuser.graph.core.AbstractEdgeIndexer
+import me.yeuser.graph.blocks.AbstractEdgeIndexer
 
 class PrimitiveArrayEdgeIndexer<T>(precision: Int, vararg edgeTypes: T) :
     AbstractEdgeIndexer<T>(precision, *edgeTypes) {

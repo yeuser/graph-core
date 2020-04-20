@@ -1,8 +1,7 @@
-package me.yeuser.graph
+package me.yeuser.graph.core
 
 import java.util.Random
 import kotlin.streams.asSequence
-import me.yeuser.graph.core.NodeIndexer
 import org.junit.jupiter.api.Test
 
 class NodeIndexerTester {

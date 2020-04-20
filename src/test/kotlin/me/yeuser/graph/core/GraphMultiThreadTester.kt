@@ -1,4 +1,4 @@
-package me.yeuser.graph
+package me.yeuser.graph.core
 
 import java.util.Random
 import kotlinx.coroutines.GlobalScope
@@ -6,7 +6,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import me.yeuser.graph.core.Graph
 import org.junit.jupiter.api.Test
 
 class GraphMultiThreadTester {

@@ -1,4 +1,4 @@
-package me.yeuser.graph.impl.fastmap
+package me.yeuser.graph.blocks.fastmap
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
@@ -6,7 +6,7 @@ import it.unimi.dsi.fastutil.ints.IntRBTreeSet
 import it.unimi.dsi.fastutil.ints.IntSet
 import it.unimi.dsi.fastutil.longs.Long2ShortMap
 import it.unimi.dsi.fastutil.longs.Long2ShortOpenHashMap
-import me.yeuser.graph.core.AbstractEdgeIndexer
+import me.yeuser.graph.blocks.AbstractEdgeIndexer
 
 class FastMapEdgeIndexer<T>(
     expectedNumberOfEdges: Int,

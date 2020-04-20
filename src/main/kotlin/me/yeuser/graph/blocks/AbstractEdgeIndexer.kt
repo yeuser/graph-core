@@ -1,9 +1,11 @@
-package me.yeuser.graph.core
+package me.yeuser.graph.blocks
 
 import java.util.concurrent.locks.ReadWriteLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.withLock
 import kotlin.math.roundToInt
+import me.yeuser.graph.core.Edge
+import me.yeuser.graph.core.IEdgeIndexer
 
 abstract class AbstractEdgeIndexer<T>(
     private var precision: Int,

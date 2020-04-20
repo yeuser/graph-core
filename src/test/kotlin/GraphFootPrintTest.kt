@@ -1,10 +1,6 @@
-package me.yeuser.graph
-
+import me.yeuser.graph.core.Graph
 import java.security.SecureRandom
 import kotlin.streams.asSequence
-import me.yeuser.graph.core.Graph
-import me.yeuser.testutil.gc
-import me.yeuser.testutil.usedMemory
 
 /**
  * Manual Memory FootPrint Test
@@ -22,7 +18,8 @@ fun main() {
 
     gc()
 
-    val baseMemoryDatum = printMemory(graph.getNodeCount(), graph.getEdgeCount())
+    val baseMemoryDatum =
+        printMemory(graph.getNodeCount(), graph.getEdgeCount())
 
     println("Creating Edges!")
 
@@ -69,7 +66,10 @@ fun main() {
             gc()
             printStatistics(addCnt, sumTimeI, "created")
             printStatistics(getCnt, sumTimeR, "read")
-            memoryData += printMemory(graph.getNodeCount(), graph.getEdgeCount())
+            memoryData += printMemory(
+                graph.getNodeCount(),
+                graph.getEdgeCount()
+            )
         }
     }
 

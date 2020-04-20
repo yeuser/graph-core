@@ -1,4 +1,4 @@
-package me.yeuser.graph.impl.primitivearray
+package me.yeuser.graph.blocks.primitivearray
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.ints.Int2ShortAVLTreeMap

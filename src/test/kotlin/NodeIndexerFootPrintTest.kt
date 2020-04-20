@@ -1,10 +1,6 @@
-package me.yeuser.graph
-
+import me.yeuser.graph.core.NodeIndexer
 import kotlin.math.floor
 import kotlin.math.log
-import me.yeuser.graph.core.NodeIndexer
-import me.yeuser.testutil.gc
-import me.yeuser.testutil.usedMemory
 
 /**
  * Manual Memory FootPrint Test

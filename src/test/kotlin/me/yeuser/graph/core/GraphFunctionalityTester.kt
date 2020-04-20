@@ -1,11 +1,8 @@
-package me.yeuser.graph
+package me.yeuser.graph.core
 
 import io.kotest.matchers.shouldBe
 import java.security.SecureRandom
 import java.util.Random
-import me.yeuser.graph.core.Graph
-import me.yeuser.graph.core.GraphEdge
-import me.yeuser.graph.core.GraphEdgeNotFound
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows

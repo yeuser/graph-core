@@ -1,4 +1,4 @@
-package me.yeuser.graph.impl.primitivearray
+package me.yeuser.graph.blocks.primitivearray
 
 /** -1≈[0xFFFF in short] is the highest unsigned value and is reserved for this flag */
 private const val REMOVE_FLAG = (-1).toShort()

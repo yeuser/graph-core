@@ -1,7 +1,7 @@
 package me.yeuser.graph.core
 
-import me.yeuser.graph.impl.fastmap.FastMapEdgeIndexer
-import me.yeuser.graph.impl.primitivearray.PrimitiveArrayEdgeIndexer
+import me.yeuser.graph.blocks.fastmap.FastMapEdgeIndexer
+import me.yeuser.graph.blocks.primitivearray.PrimitiveArrayEdgeIndexer
 
 class Graph<T> private constructor(private val edgeIndexer: IEdgeIndexer<T>) {
 

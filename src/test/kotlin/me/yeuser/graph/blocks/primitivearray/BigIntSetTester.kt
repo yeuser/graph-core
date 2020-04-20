@@ -1,4 +1,4 @@
-package me.yeuser.graph.impl.primitivearray
+package me.yeuser.graph.blocks.primitivearray
 
 import java.util.Random
 import kotlin.streams.toList
