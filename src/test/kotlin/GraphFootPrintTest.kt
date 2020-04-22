@@ -1,6 +1,6 @@
-import me.yeuser.graph.core.Graph
 import java.security.SecureRandom
 import kotlin.streams.asSequence
+import me.yeuser.graph.core.Graph
 
 /**
  * Manual Memory FootPrint Test

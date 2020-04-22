@@ -5,12 +5,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.withLock
 import kotlin.math.roundToInt
 import me.yeuser.graph.core.Edge
-import me.yeuser.graph.core.IEdgeIndexer
+import me.yeuser.graph.core.EdgeIndexer
 
 abstract class AbstractEdgeIndexer<T>(
     private var precision: Int,
     vararg edgeTypes: T
-) : IEdgeIndexer<T> {
+) : EdgeIndexer<T> {
 
     init {
         assert(precision > 1) { "Precision must be bigger than 1." }

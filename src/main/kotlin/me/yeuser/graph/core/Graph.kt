@@ -3,7 +3,7 @@ package me.yeuser.graph.core
 import me.yeuser.graph.blocks.fastmap.FastMapEdgeIndexer
 import me.yeuser.graph.blocks.primitivearray.PrimitiveArrayEdgeIndexer
 
-class Graph<T> private constructor(private val edgeIndexer: IEdgeIndexer<T>) {
+class Graph<T> private constructor(private val edgeIndexer: EdgeIndexer<T>) {
 
     companion object {
         fun <T> createWithPrimitiveArrays(precision: Int, vararg edgeTypes: T): Graph<T> =
@@ -56,7 +56,7 @@ class Graph<T> private constructor(private val edgeIndexer: IEdgeIndexer<T>) {
         val fromIdx = nodeIndexer.indexOf(from)
         return edgeIndexer.allFrom(fromIdx, type)
             .filter { edge -> edge.weight in minWeight..maxWeight }
-            .map { GraphEdge(from, nodeIndexer.fromIndex(it.toIdx), it.type, it.weight) }
+            .map { GraphEdge(from, nodeIndexer.fromIndex(it.to), it.type, it.weight) }
     }
 
     fun getEdgeConnectionsTo(
@@ -68,7 +68,7 @@ class Graph<T> private constructor(private val edgeIndexer: IEdgeIndexer<T>) {
         val toIdx = nodeIndexer.indexOf(to)
         return edgeIndexer.allTo(toIdx, type)
             .filter { edge -> edge.weight in minWeight..maxWeight }
-            .map { GraphEdge(nodeIndexer.fromIndex(it.fromIdx), to, it.type, it.weight) }
+            .map { GraphEdge(nodeIndexer.fromIndex(it.from), to, it.type, it.weight) }
     }
 
     fun getNodeCount(): Int {
@@ -89,7 +89,7 @@ data class GraphEdge<T> internal constructor(
 
 class GraphEdgeNotFound(val from: Long, val to: Long) : Exception("Graph has no edge from $from to $to.")
 
-interface IEdgeIndexer<T> {
+interface EdgeIndexer<T> {
     fun add(from: Int, to: Int, type: T, weight: Double, biDirectional: Boolean)
     fun remove(from: Int, to: Int, biDirectional: Boolean)
     fun get(from: Int, to: Int): Edge<T>?
@@ -98,4 +98,15 @@ interface IEdgeIndexer<T> {
     fun count(): Int
 }
 
-data class Edge<T>(val fromIdx: Int, val toIdx: Int, val type: T, val weight: Double)
+data class Edge<T>(val from: Int, val to: Int, val type: T, val weight: Double)
+
+abstract class GraphRouter<T>(
+    protected val edges: EdgeIndexer<T>
+) {
+    abstract fun route(
+        from: Int,
+        to: Int,
+        type: T? = null,
+        maxW: Double = Double.MAX_VALUE
+    ): List<Pair<Int, Double>>
+}

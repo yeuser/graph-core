@@ -1,6 +1,6 @@
-import me.yeuser.graph.blocks.primitivearray.BigInt2Short
 import java.util.Random
 import kotlin.streams.asSequence
+import me.yeuser.graph.blocks.primitivearray.BigInt2Short
 
 fun main() {
     val random = Random()
