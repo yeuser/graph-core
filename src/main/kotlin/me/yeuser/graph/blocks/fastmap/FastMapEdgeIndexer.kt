@@ -17,6 +17,8 @@ class FastMapEdgeIndexer<T>(
     private val edgeValues: Long2ShortMap = Long2ShortOpenHashMap(expectedNumberOfEdges, 1f)
     private val edges: Int2ObjectMap<IntSet> = Int2ObjectOpenHashMap(4096, 1f)
     private val edgesReverse: Int2ObjectMap<IntSet> = Int2ObjectOpenHashMap(4096, 1f)
+    override val minWeight: Double? = 0.0
+    override val maxWeight: Double? = 1.0
 
     override fun add(from: Int, to: Int, value: Short) {
         val fromTo = getFromTo(from, to)

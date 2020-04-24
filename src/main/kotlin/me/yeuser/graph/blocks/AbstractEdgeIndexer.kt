@@ -1,11 +1,13 @@
 package me.yeuser.graph.blocks
 
+import com.google.common.base.Preconditions.checkArgument
+import me.yeuser.graph.core.Edge
+import me.yeuser.graph.core.EdgeIndexer
 import java.util.concurrent.locks.ReadWriteLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.withLock
+import kotlin.math.abs
 import kotlin.math.roundToInt
-import me.yeuser.graph.core.Edge
-import me.yeuser.graph.core.EdgeIndexer
 
 abstract class AbstractEdgeIndexer<T>(
     private var precision: Int,
@@ -29,6 +31,9 @@ abstract class AbstractEdgeIndexer<T>(
     protected abstract fun connectionsTo(to: Int): Sequence<Pair<Int, Short>>?
     protected abstract fun size(): Int
 
+    protected open val minWeight: Double? = null // the inclusive lower boundary if given
+    protected open val maxWeight: Double? = null // the exclusive upper boundary if given
+
     final override fun add(
         from: Int,
         to: Int,
@@ -36,6 +41,12 @@ abstract class AbstractEdgeIndexer<T>(
         weight: Double,
         biDirectional: Boolean
     ) {
+        minWeight?.let {
+            checkArgument(weight >= it, "weight must be equal to/bigger than lower boundary: $it")
+        }
+        maxWeight?.let {
+            checkArgument(weight < it, "weight must be less than upper boundary: $it")
+        }
         val edgeType = edgeTypes.indexOfFirst { it == type }
         assert(edgeType >= 0) { "Given `type` is unknown!" }
         val typeWeight = getTypeWeight(edgeType, weight)
@@ -58,7 +69,10 @@ abstract class AbstractEdgeIndexer<T>(
 
     private fun getTypeWeight(t: Int, weight: Double): Short {
         val w = (weight * precision).roundToInt() - 1
-        return (t * precision + w).toShort()
+        return (t * precision + w).toShort().also {
+            check(getEdgeType(it) == t)
+            check(abs(getWeight(it) - weight) < 1.0 / precision)
+        }
     }
 
     final override fun get(from: Int, to: Int): Edge<T>? =

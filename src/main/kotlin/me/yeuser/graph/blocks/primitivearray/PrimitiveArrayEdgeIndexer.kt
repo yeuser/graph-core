@@ -8,6 +8,9 @@ class PrimitiveArrayEdgeIndexer<T>(precision: Int, vararg edgeTypes: T) :
     private val edges = VerticesMap()
     private val edgesReverse = VerticesSet()
 
+    override val minWeight: Double? = 0.0
+    override val maxWeight: Double? = 1.0
+
     override fun add(from: Int, to: Int, value: Short) {
         edges.add(from, to, value)
         edgesReverse.add(to, from)
