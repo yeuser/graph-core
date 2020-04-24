@@ -2,11 +2,12 @@ package me.yeuser.graph.routing
 
 import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.shouldBe
-import me.yeuser.graph.blocks.fastmap.FastMapEdgeIndexer
-import org.junit.jupiter.api.Test
 import java.util.Queue
 import java.util.Random
 import java.util.concurrent.ConcurrentLinkedQueue
+import me.yeuser.graph.blocks.TypeWeightCompressor.roundToPrecision
+import me.yeuser.graph.blocks.fastmap.FastMapEdgeIndexer
+import org.junit.jupiter.api.Test
 
 class SimpleRouterFunctionalityTester {
 
@@ -46,18 +47,19 @@ class SimpleRouterFunctionalityTester {
                 repeat(MESH_NODE_COUNT) { j -> // to #nodes
                     // randomly (50-50 chance) connect or disconnect the nodes with random weight
                     if (i != j && random.nextBoolean())
-                        connections[k * MESH_NODE_COUNT + i][k * MESH_NODE_COUNT + j] = random.nextDouble()
+                        connections[k * MESH_NODE_COUNT + i][k * MESH_NODE_COUNT + j] =
+                            roundToPrecision(10_000, random.nextDouble())
                 }
             }
         }
-        repeat(MESH_COUNT) { k1 ->// from source mesh
-            repeat(MESH_COUNT) { k2 ->// to destination mesh
+        repeat(MESH_COUNT) { k1 -> // from source mesh
+            repeat(MESH_COUNT) { k2 -> // to destination mesh
                 if (k1 != k2) repeat(2) { // connect two nodes from source mesh to two nodes at destination mesh
                     val i = random.nextInt(MESH_NODE_COUNT)
                     val j = random.nextInt(MESH_NODE_COUNT)
-                    connections[k1 * MESH_NODE_COUNT + i][k2 * MESH_NODE_COUNT + j] = random.nextDouble()
+                    connections[k1 * MESH_NODE_COUNT + i][k2 * MESH_NODE_COUNT + j] =
+                        roundToPrecision(10_000, random.nextDouble())
                 }
-
             }
         }
 
@@ -71,19 +73,19 @@ class SimpleRouterFunctionalityTester {
         // randomly do find routes
         repeat(200) {
             val bestPaths = mutableMapOf<Int, Pair<Double, IntArray>>()
-            val queue: Queue<Pair<Int, Int>> = ConcurrentLinkedQueue()
+            val queue: Queue<Int> = ConcurrentLinkedQueue()
             val i = random.nextInt(MESH_NODE_COUNT * MESH_COUNT)
             bestPaths[i] = 0.0 to intArrayOf(i)
             connections[i].forEach { (j, w) ->
-                queue.add(i to j)
+                queue.add(j)
                 bestPaths[j] = w to intArrayOf(i, j)
             }
             while (queue.isNotEmpty()) {
-                val (prv, cur) = queue.remove()
+                val cur = queue.remove()
                 connections[cur].forEach { (nxt, dw) ->
                     val w = bestPaths[cur]!!.first + dw
                     if (bestPaths[nxt]?.first ?: Double.MAX_VALUE > w) {
-                        queue.add(cur to nxt)
+                        queue.add(nxt)
                         bestPaths[nxt] = w to bestPaths[cur]!!.second + nxt
                     }
                 }
@@ -91,7 +93,17 @@ class SimpleRouterFunctionalityTester {
             val j = random.nextInt(MESH_NODE_COUNT * MESH_COUNT)
 
             val router = SimpleGraphRouter(edges)
-            router.route(i, j) shouldBe bestPaths[j]!!.second.map { it to bestPaths[it]!!.first }
+            val actual = router.route(i, j)
+            val expected = bestPaths[j]!!.second.map { it to bestPaths[it]!!.first }
+            try {
+                "%,.4f".format(actual.last().second) shouldBe "%,.4f".format(expected.last().second)
+            } catch (e: AssertionError) {
+                println("""
+                    ${actual.size} ${actual.map { it.first }} ${actual.map { "%,.4f".format(it.second) }}
+                    ${expected.size} ${expected.map { it.first }} ${expected.map {"%,.4f".format(it.second)}}
+                """.trimIndent())
+                throw e
+            }
         }
     }
 

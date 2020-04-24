@@ -32,11 +32,11 @@ class SimpleGraphRouter<T>(edges: EdgeIndexer<T>) : GraphRouter<T>(edges) {
             node = queue.dequeueInt()
         }
         val ret = mutableListOf<Pair<Int, Double>>()
-        do {
+        while (node != from) {
             val (w, f) = seen[node]
             ret.add(node to w)
             node = f!!
-        } while (node != from)
+        }
         ret.add(from to 0.0)
         return ret.reversed()
     }
