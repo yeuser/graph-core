@@ -1,13 +1,16 @@
 package me.yeuser.graph.blocks
 
 import com.google.common.base.Preconditions.checkArgument
-import me.yeuser.graph.core.Edge
-import me.yeuser.graph.core.EdgeIndexer
 import java.util.concurrent.locks.ReadWriteLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.withLock
-import kotlin.math.abs
-import kotlin.math.roundToInt
+import me.yeuser.graph.blocks.TypeWeightCompressor.checkOverflow
+import me.yeuser.graph.blocks.TypeWeightCompressor.compress
+import me.yeuser.graph.blocks.TypeWeightCompressor.extractType
+import me.yeuser.graph.blocks.TypeWeightCompressor.extractWeight
+import me.yeuser.graph.blocks.TypeWeightCompressor.roundToPrecision
+import me.yeuser.graph.core.Edge
+import me.yeuser.graph.core.EdgeIndexer
 
 abstract class AbstractEdgeIndexer<T>(
     private var precision: Int,
@@ -16,9 +19,7 @@ abstract class AbstractEdgeIndexer<T>(
 
     init {
         assert(precision > 1) { "Precision must be bigger than 1." }
-        assert(edgeTypes.size * precision <= 0xFFFF) {
-            "Given number of precision and number of edgeTypes are more than acceptable range."
-        }
+        checkOverflow(precision, edgeTypes.size)
     }
 
     private val lock: ReadWriteLock = ReentrantReadWriteLock()
@@ -31,8 +32,8 @@ abstract class AbstractEdgeIndexer<T>(
     protected abstract fun connectionsTo(to: Int): Sequence<Pair<Int, Short>>?
     protected abstract fun size(): Int
 
-    protected open val minWeight: Double? = null // the inclusive lower boundary if given
-    protected open val maxWeight: Double? = null // the exclusive upper boundary if given
+    protected open val minWeight: Double? = null // The lower boundary if given
+    protected open val maxWeight: Double? = null // The upper boundary if given
 
     final override fun add(
         from: Int,
@@ -41,15 +42,16 @@ abstract class AbstractEdgeIndexer<T>(
         weight: Double,
         biDirectional: Boolean
     ) {
+        val w = roundToPrecision(precision, weight)
         minWeight?.let {
-            checkArgument(weight >= it, "weight must be equal to/bigger than lower boundary: $it")
+            checkArgument(w >= it, "weight must be equal to/bigger than lower boundary: $it")
         }
         maxWeight?.let {
-            checkArgument(weight < it, "weight must be less than upper boundary: $it")
+            checkArgument(w <= it, "weight must be less than/equal to upper boundary: $it")
         }
         val edgeType = edgeTypes.indexOfFirst { it == type }
         assert(edgeType >= 0) { "Given `type` is unknown!" }
-        val typeWeight = getTypeWeight(edgeType, weight)
+        val typeWeight = compress(precision, edgeType, w)
         lock.writeLock().withLock {
             add(from, to, typeWeight)
             if (biDirectional) add(to, from, typeWeight)
@@ -67,35 +69,21 @@ abstract class AbstractEdgeIndexer<T>(
         }
     }
 
-    private fun getTypeWeight(t: Int, weight: Double): Short {
-        val w = (weight * precision).roundToInt() - 1
-        return (t * precision + w).toShort().also {
-            check(getEdgeType(it) == t)
-            check(abs(getWeight(it) - weight) < 1.0 / precision)
-        }
-    }
-
     final override fun get(from: Int, to: Int): Edge<T>? =
-        lock.readLock().withLock {
-            valueOf(from, to)
-        }?.let {
-            Edge(from, to, edgeTypes[getEdgeType(it)], getWeight(it))
-        }
-
-    private fun getEdgeType(typeWeight: Short) =
-        (typeWeight.toInt() and 0xFFFF) / precision
-
-    private fun getWeight(typeWeight: Short) =
-        ((typeWeight.toInt() and 0xFFFF) % precision + 1.0) / precision
+        lock.readLock().withLock { valueOf(from, to) }
+            ?.let { Edge(from, to, edgeTypes[extractType(precision, it)], extractWeight(precision, it)) }
 
     final override fun allFrom(from: Int, type: T?): Sequence<Edge<T>> {
         val edgeType = type?.let { edgeTypes.indexOfFirst { it == type } }
         assert(edgeType != -1) { "Given `type` ($type) is unknown!" }
         return lock.readLock().withLock {
             connectionsFrom(from).orEmpty()
-                .run { if (edgeType == null) this else filter { (_, tw) -> getEdgeType(tw) == edgeType } }
+                .run {
+                    if (edgeType == null) this
+                    else filter { (_, tw) -> extractType(precision, tw) == edgeType }
+                }
                 .map { (to, typeWeight) ->
-                    Edge(from, to, edgeTypes[getEdgeType(typeWeight)], getWeight(typeWeight))
+                    Edge(from, to, edgeTypes[extractType(precision, typeWeight)], extractWeight(precision, typeWeight))
                 }
         }.asSequence()
     }
@@ -105,9 +93,12 @@ abstract class AbstractEdgeIndexer<T>(
         assert(edgeType != -1) { "Given `type` ($type) is unknown!" }
         return lock.readLock().withLock {
             connectionsTo(to).orEmpty()
-                .run { if (edgeType == null) this else filter { (_, tw) -> getEdgeType(tw) == edgeType } }
+                .run {
+                    if (edgeType == null) this
+                    else filter { (_, tw) -> extractType(precision, tw) == edgeType }
+                }
                 .map { (from, typeWeight) ->
-                    Edge(from, to, edgeTypes[getEdgeType(typeWeight)], getWeight(typeWeight))
+                    Edge(from, to, edgeTypes[extractType(precision, typeWeight)], extractWeight(precision, typeWeight))
                 }
         }.asSequence()
     }
