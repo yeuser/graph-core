@@ -12,7 +12,7 @@ class GraphFunctionalityTester {
     @Test
     fun `test typeWeight in Graph with primitives`() {
         val typesCount = 0xFF
-        val precision = 0xFFFF / typesCount
+        val precision = 0xFFFF / typesCount - 1
         val random = SecureRandom()
         val edgeTypes = (1..typesCount).map { "type-$it" }.toTypedArray()
         for (graph in listOf(

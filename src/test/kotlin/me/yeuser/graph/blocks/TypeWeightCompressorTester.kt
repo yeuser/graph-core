@@ -10,7 +10,7 @@ import org.junit.jupiter.params.provider.MethodSource
 
 class TypeWeightCompressorTester {
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "Sanity test {index} precision={0}, type={1}, weight={2}")
     @MethodSource("sanityCheckArguments")
     fun testSanity(precision: Int, type: Int, weight: Double) {
         val compressed = compress(precision, type, weight)
@@ -26,7 +26,9 @@ class TypeWeightCompressorTester {
             arrayOf<Any>(10_000, 0, 0.0),
             arrayOf<Any>(100, 100, 1.0),
             arrayOf<Any>(100, 10, 0.99),
-            arrayOf<Any>(1000, 0, 1.0)
+            arrayOf<Any>(1000, 0, 1.0),
+            arrayOf<Any>(256, 254, 1.0),
+            arrayOf<Any>(256, 254, 0.0)
         )
     }
 }

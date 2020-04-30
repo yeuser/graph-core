@@ -102,6 +102,7 @@ class SimpleRouterFunctionalityTester {
                     ${actual.size} ${actual.map { it.first }} ${actual.map { "%,.4f".format(it.second) }}
                     ${expected.size} ${expected.map { it.first }} ${expected.map {"%,.4f".format(it.second)}}
                 """.trimIndent())
+                router.route(i, j)
                 throw e
             }
         }
