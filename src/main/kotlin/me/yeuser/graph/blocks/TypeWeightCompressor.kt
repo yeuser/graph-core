@@ -3,6 +3,7 @@ package me.yeuser.graph.blocks
 import kotlin.math.roundToInt
 
 object TypeWeightCompressor {
+    private const val uInt16Upper = 0xFFFF
 
     fun roundToPrecision(precision: Int, weight: Double): Double =
         (weight * precision).roundToInt().toDouble() / precision
@@ -13,15 +14,16 @@ object TypeWeightCompressor {
     }
 
     fun extractType(precision: Int, typeWeight: Short) =
-        (typeWeight.toInt() and 0xFFFF) / (precision + 1)
+        (typeWeight.toInt() and uInt16Upper) / (precision + 1)
 
     fun extractWeight(precision: Int, typeWeight: Short) =
-        ((typeWeight.toInt() and 0xFFFF) % (precision + 1)).toDouble() / precision
+        ((typeWeight.toInt() and uInt16Upper) % (precision + 1)).toDouble() / precision
 
     fun checkOverflow(precision: Int, typeCount: Int) {
-        check(typeCount * (precision + 1) <= 0xFFFF) {
+
+        check(typeCount * (precision + 1) <= uInt16Upper) {
             throw ArithmeticException(
-                "Overflow: Given set of `precision and typeCount` creates more than ${0x10000} distinct states."
+                "Overflow: Given set of `precision and typeCount` creates more than $uInt16Upper distinct states."
             )
         }
     }
