@@ -19,8 +19,9 @@ class SimpleGraphRouter<T>(edges: EdgeIndexer<T>) : GraphRouter<T>(edges) {
             10_000,
             IntComparator { n1, n2 -> seen[n1].first.compareTo(seen[n2].first) })
         seen[from] = 0.0 to null
-        var node = from
-        while (node != to) {
+        queue.enqueue(from)
+        while (!queue.isEmpty) {
+            val node = queue.dequeueInt()
             edges.allFrom(node, type).forEach { (from, to, _, ew) ->
                 val w = seen[from].first + ew
                 if (w < seen[to].first) {
@@ -28,10 +29,12 @@ class SimpleGraphRouter<T>(edges: EdgeIndexer<T>) : GraphRouter<T>(edges) {
                     if (w < maxW) queue.enqueue(to)
                 }
             }
-            if (queue.size() == 0) return emptyList()
-            node = queue.dequeueInt()
         }
+
+        if (!seen.containsKey(to)) return emptyList()
+
         val ret = mutableListOf<Pair<Int, Double>>()
+        var node = to
         while (node != from) {
             val (w, f) = seen[node]
             ret.add(node to w)
