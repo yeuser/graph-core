@@ -2,14 +2,14 @@ package me.yeuser.graph.routing
 
 import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.shouldBe
+import java.util.Queue
+import java.util.Random
+import java.util.concurrent.ConcurrentLinkedQueue
 import me.yeuser.graph.blocks.TypeWeightCompressor.roundToPrecision
 import me.yeuser.graph.blocks.fastmap.FastMapEdgeIndexer
 import me.yeuser.graph.core.GraphRouter
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
-import java.util.Queue
-import java.util.Random
-import java.util.concurrent.ConcurrentLinkedQueue
 
 abstract class BaseRouterFunctionalityTester {
 
@@ -115,7 +115,6 @@ abstract class BaseRouterFunctionalityTester {
                 .limit(2)
                 .toArray()
                 .map { MESH_NODE_COUNT * it + random.nextInt(MESH_NODE_COUNT) }
-
 
             bestPaths[i] = 0.0 to intArrayOf(i)
             connections[i].forEach { (j, w) ->

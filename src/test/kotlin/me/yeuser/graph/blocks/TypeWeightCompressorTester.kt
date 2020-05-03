@@ -40,8 +40,8 @@ class TypeWeightCompressorTester {
     @Test
     fun `test overflow of TypeWeightCompressor`() {
         assertThrows<ArithmeticException> {
-            checkOverflow(255,256)
+            checkOverflow(255, 256)
         }
-        checkOverflow(256,255)
+        checkOverflow(256, 255)
     }
 }

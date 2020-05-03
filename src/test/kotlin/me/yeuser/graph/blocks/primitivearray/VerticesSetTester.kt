@@ -14,7 +14,7 @@ class VerticesSetTester {
             (0 until nodesCount).filter { j -> i != j && random.nextBoolean() }
         }
 
-        nodeEdges.forEach { (from, toN) -> toN.map { vertices.add(from, it) } }
+        nodeEdges.forEach { (from, toN) -> vertices.addAll(toN.map { from to it }) }
 
         nodeEdges.forEach { (from, tos) ->
             val expected = tos.toSet()
@@ -26,7 +26,7 @@ class VerticesSetTester {
             value.filter { random.nextBoolean() }
         }
 
-        nodeEdges2Delete.forEach { (from, toN) -> toN.map { vertices.remove(from, it) } }
+        nodeEdges2Delete.forEach { (from, toN) -> vertices.removeAll(toN.map { from to it }) }
 
         nodeEdges.forEach { (from, tos) ->
             val expected = tos.minus(nodeEdges2Delete.getValue(from)).toSet()
