@@ -64,9 +64,11 @@ fun main() {
 
     val b = memoryData.map { md -> md.second - a * md.first }.average()
 
-    println("Deducted formula: `memory = ${formatMemory(a)} * nodes + ${formatMemory(
-        b
-    )}`")
+    println(
+        "Deducted formula: `memory = ${formatMemory(a)} * nodes + ${formatMemory(
+            b
+        )}`"
+    )
 }
 
 private fun printStatistics(cnt: Int, sumTime: Long, action: String) {
@@ -78,12 +80,13 @@ private fun printMemory(nodes: Int): NIMemoryDatum {
     val memory = usedMemory()
     println(
         """
-    Used memory: ${formatMemory(memory.toDouble())}
-      #nodes: ${"%,d".format(nodes)}
-    """.trimIndent()
+        Used memory: ${formatMemory(memory.toDouble())}
+          #nodes: ${"%,d".format(nodes)}
+        """.trimIndent()
     )
-    if (nodes > 0)
+    if (nodes > 0) {
         println("~used mem per edge: ${formatMemory(memory.toDouble() / nodes)}")
+    }
     return Pair(nodes, memory)
 }
 

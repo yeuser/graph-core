@@ -79,22 +79,24 @@ abstract class BaseRouterFunctionalityTester {
             repeat(MESH_NODE_COUNT) { i -> // from #nodes
                 repeat(MESH_NODE_COUNT) { j -> // to #nodes
                     // randomly (50-50 chance) connect or disconnect the nodes with random weight
-                    if (i != j && random.nextBoolean())
+                    if (i != j && random.nextBoolean()) {
                         connections[k * MESH_NODE_COUNT + i][k * MESH_NODE_COUNT + j] =
                             roundToPrecision(10_000, random.nextDouble())
+                    }
                 }
             }
         }
         repeat(MESH_COUNT) { k1 -> // from source mesh
             repeat(MESH_COUNT) { k2 -> // to destination mesh
                 // give 50-50 chance for connecting the mesh islands
-                if (k1 != k2 && random.nextBoolean())
+                if (k1 != k2 && random.nextBoolean()) {
                     repeat(2) { // connect two nodes from source mesh to two nodes at destination mesh
                         val i = random.nextInt(MESH_NODE_COUNT)
                         val j = random.nextInt(MESH_NODE_COUNT)
                         connections[k1 * MESH_NODE_COUNT + i][k2 * MESH_NODE_COUNT + j] =
                             roundToPrecision(10_000, random.nextDouble())
                     }
+                }
             }
         }
 
@@ -138,10 +140,11 @@ abstract class BaseRouterFunctionalityTester {
             try {
                 "%,.4f".format(actual.last().second) shouldBe "%,.4f".format(expected.last().second)
             } catch (e: AssertionError) {
-                println("""
+                println(
+                    """
                     ${actual.size} ${actual.map { it.first }} ${actual.map { "%,.4f".format(it.second) }}
                     ${expected.size} ${expected.map { it.first }} ${expected.map { "%,.4f".format(it.second) }}
-                """.trimIndent()
+                    """.trimIndent()
                 )
                 throw e
             }

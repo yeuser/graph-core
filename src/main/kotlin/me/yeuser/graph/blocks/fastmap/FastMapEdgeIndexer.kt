@@ -41,11 +41,11 @@ class FastMapEdgeIndexer<T>(
 
     override fun connectionsFrom(from: Int): Sequence<Pair<Int, Short>>? =
         edges[from]?.asSequence()
-        ?.map { to -> to to valueOf(from, to)!! }
+            ?.map { to -> to to valueOf(from, to)!! }
 
     override fun connectionsTo(to: Int): Sequence<Pair<Int, Short>>? =
         edgesReverse[to]?.asSequence()
-        ?.map { from -> from to valueOf(from, to)!! }
+            ?.map { from -> from to valueOf(from, to)!! }
 
     override fun size(): Int = edges.size
 

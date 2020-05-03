@@ -15,10 +15,11 @@ class GraphFunctionalityTester {
         val precision = 0xFFFF / typesCount - 1
         val random = SecureRandom()
         val edgeTypes = (1..typesCount).map { "type-$it" }.toTypedArray()
-        for (graph in listOf(
+        val graphs = listOf(
             Graph.createWithPrimitiveArrays(precision, *edgeTypes),
             Graph.createWithFastMap(precision, *edgeTypes)
-        )) {
+        )
+        for (graph in graphs) {
             val weight1 = (1).toDouble() / precision
             val type1 = "type-1"
             graph.addEdge(1L, 2L, type1, weight1, false)
@@ -38,11 +39,11 @@ class GraphFunctionalityTester {
     fun `test edge removal at Graph with primitives`() {
         val precision = 100
         val edgeTypes = arrayOf("A", "B", "C")
-        for (graph in listOf(
+        val graphs = listOf(
             Graph.createWithPrimitiveArrays(precision, *edgeTypes),
             Graph.createWithFastMap(precision, *edgeTypes)
-        )) {
-
+        )
+        for (graph in graphs) {
             val (from, to) = 1L to 2L
             graph.addEdge(from, to, "A", 0.5, true)
             graph.removeEdge(from, to, false)
@@ -66,11 +67,11 @@ class GraphFunctionalityTester {
         val random = Random()
         val precision = 100
         val edgeTypes = arrayOf("A", "B", "C")
-        for (graph in listOf(
+        val graphs = listOf(
             Graph.createWithPrimitiveArrays(precision, *edgeTypes),
             Graph.createWithFastMap(precision, *edgeTypes)
-        )) {
-
+        )
+        for (graph in graphs) {
             val nodeEdges = (0 until 10).associateWith { i ->
                 (0 until 10).filter { j ->
                     i != j && random.nextBoolean()
@@ -107,11 +108,11 @@ class GraphFunctionalityTester {
         val random = Random()
         val precision = 100
         val edgeTypes = arrayOf("A", "B", "C")
-        for (graph in listOf(
+        val graphs = listOf(
             Graph.createWithPrimitiveArrays(precision, *edgeTypes),
             Graph.createWithFastMap(precision, *edgeTypes)
-        )) {
-
+        )
+        for (graph in graphs) {
             val nodeEdges = (0 until 9).associateWith { (it + 1 until 10).filter { random.nextBoolean() } }
 
             val nodes = random.longs(10).toArray()

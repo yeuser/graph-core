@@ -19,7 +19,8 @@ class SimpleGraphRouter<T>(edges: EdgeIndexer<T>) : GraphRouter<T>(edges) {
         val seen = Int2ObjectOpenHashMap<Pair<Double, Int?>>().apply { defaultReturnValue(Double.MAX_VALUE to null) }
         val queue = IntHeapPriorityQueue(
             10_000,
-            IntComparator { n1, n2 -> seen[n1].first.compareTo(seen[n2].first) })
+            IntComparator { n1, n2 -> seen[n1].first.compareTo(seen[n2].first) }
+        )
         seen[from] = 0.0 to null
         queue.enqueue(from)
         while (!queue.isEmpty) {

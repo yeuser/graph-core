@@ -21,12 +21,14 @@ class BiDirGraphRouter<T>(edges: EdgeIndexer<T>) : GraphRouter<T>(edges) {
             Int2ObjectOpenHashMap<Pair<Double, Int?>>().apply { defaultReturnValue(Double.MAX_VALUE to null) }
         val queueForward = IntHeapPriorityQueue(
             10_000,
-            IntComparator { n1, n2 -> seenForward[n1].first.compareTo(seenForward[n2].first) })
+            IntComparator { n1, n2 -> seenForward[n1].first.compareTo(seenForward[n2].first) }
+        )
         val seenBackward =
             Int2ObjectOpenHashMap<Pair<Double, Int?>>().apply { defaultReturnValue(Double.MAX_VALUE to null) }
         val queueBackward = IntHeapPriorityQueue(
             10_000,
-            IntComparator { n1, n2 -> seenBackward[n1].first.compareTo(seenBackward[n2].first) })
+            IntComparator { n1, n2 -> seenBackward[n1].first.compareTo(seenBackward[n2].first) }
+        )
         seenForward[from] = 0.0 to null
         queueForward.enqueue(from)
         seenBackward[to] = 0.0 to null
@@ -49,7 +51,6 @@ class BiDirGraphRouter<T>(edges: EdgeIndexer<T>) : GraphRouter<T>(edges) {
                 }
             }
             if (!queueBackward.isEmpty) {
-
                 val nodeBackward = queueBackward.dequeueInt()
                 edges.allTo(nodeBackward, type).forEach { (from, to, _, ew) ->
                     val w = seenBackward[from].first + ew

@@ -19,7 +19,6 @@ class BigInt2ShortTester {
 
     @Test
     fun testFunctionality() {
-
         val allInts = mutableMapOf<Int, Short>()
         val bigIntSet = BigInt2Short()
 
@@ -44,7 +43,8 @@ class BigInt2ShortTester {
 
             assertEquals(
                 allInts.entries.map { it.toPair() }.sortedBy { it.first }.toList(),
-                bigIntSet.asSequence().sortedBy { it.first }.toList(), """
+                bigIntSet.asSequence().sortedBy { it.first }.toList(),
+                """
                 `allInts` has extra: ${allInts.entries.map { it.toPair() }.minus(bigIntSet.asSequence())} 
                 `bigIntSet` has extra: ${bigIntSet.asSequence().minus(allInts.entries.map { it.toPair() }.toSet())}
                 """.trimIndent()

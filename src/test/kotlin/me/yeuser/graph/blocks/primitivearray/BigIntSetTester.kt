@@ -20,7 +20,6 @@ class BigIntSetTester {
 
     @Test
     fun testFunctionality() {
-
         val allInts = mutableSetOf<Int>()
         val bigIntSet = BigIntSet()
 
@@ -37,9 +36,11 @@ class BigIntSetTester {
             print("final size: ${allInts.size}")
 
             bigIntSet.addAll(insertSet)
-            insertSet.forEach { testNumber -> assert(bigIntSet.has(testNumber)) {
-                "$bigIntSet, $testNumber"
-            } }
+            insertSet.forEach { testNumber ->
+                assert(bigIntSet.has(testNumber)) {
+                    "$bigIntSet, $testNumber"
+                }
+            }
             bigIntSet.removeAll(deleteSet)
 
             assertEquals(allInts.size, bigIntSet.size)
@@ -47,7 +48,8 @@ class BigIntSetTester {
 
             assertEquals(
                 allInts.toSet(),
-                bigIntSet.asSequence().toSet(), """
+                bigIntSet.asSequence().toSet(),
+                """
                 `allInts` has extra: ${allInts.minus(bigIntSet.asSequence())} 
                 `bigIntSet` has extra: ${bigIntSet.asSequence().minus(allInts).toSet()}
                 """.trimIndent()

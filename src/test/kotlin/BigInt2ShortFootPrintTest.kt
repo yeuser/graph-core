@@ -11,12 +11,12 @@ fun main() {
 
     println(
         """
-      Setup:
-          testCount: $testCount
-          setSize: $setSize
-          upperBoundary: $upperBoundary
+        Setup:
+            testCount: $testCount
+            setSize: $setSize
+            upperBoundary: $upperBoundary
 
-    """.trimIndent()
+        """.trimIndent()
     )
     val titles = listOf(
         "method".padStart(20),

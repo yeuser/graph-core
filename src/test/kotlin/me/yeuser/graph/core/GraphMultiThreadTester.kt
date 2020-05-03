@@ -14,10 +14,11 @@ class GraphMultiThreadTester {
     fun testFunctionalityMultiThreaded() {
         val precision = 100
         val edgeTypes = arrayOf("A", "B", "C")
-        for (graph in listOf(
+        val graphs = listOf(
             Graph.createWithPrimitiveArrays(precision, *edgeTypes),
             Graph.createWithFastMap(precision, *edgeTypes)
-        )) {
+        )
+        for (graph in graphs) {
             val nodeEdges = arrayOf(
                 0 to arrayOf(1, 2),
                 1 to arrayOf(3, 4, 5),

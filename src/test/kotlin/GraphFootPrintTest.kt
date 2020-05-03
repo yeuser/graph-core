@@ -101,9 +101,11 @@ fun main() {
 
     val c = memoryData.map { md -> md.third - b * md.second - a * md.first }.average()
 
-    println("Deducted formula: `memory = ${formatMemory(a)} * nodes + ${formatMemory(
-        b
-    )} * edges + ${formatMemory(c)}`")
+    println(
+        "Deducted formula: `memory = ${formatMemory(a)} * nodes + ${formatMemory(
+            b
+        )} * edges + ${formatMemory(c)}`"
+    )
 }
 
 private fun printStatistics(cnt: Int, sumTime: Long, action: String) {
@@ -115,13 +117,14 @@ private fun printMemory(nodes: Int, edges: Int): MemoryDatum {
     val memory = usedMemory()
     println(
         """
-    Used memory: ${formatMemory(memory.toDouble())}
-      #nodes: ${"%,d".format(nodes)} 
-      #edges: ${"%,d".format(edges)}
-    """.trimIndent()
+        Used memory: ${formatMemory(memory.toDouble())}
+          #nodes: ${"%,d".format(nodes)} 
+          #edges: ${"%,d".format(edges)}
+        """.trimIndent()
     )
-    if (edges > 0)
+    if (edges > 0) {
         println("~used mem per edge: ${formatMemory(memory.toDouble() / edges)}")
+    }
     return Triple(nodes, edges, memory)
 }
 typealias MemoryDatum = Triple<Int, Int, Long>
