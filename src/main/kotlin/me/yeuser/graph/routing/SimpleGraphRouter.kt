@@ -14,6 +14,8 @@ class SimpleGraphRouter<T>(edges: EdgeIndexer<T>) : GraphRouter<T>(edges) {
         type: T?,
         maxW: Double
     ): List<Pair<Int, Double>> {
+        if (from == to) return listOf(from to 0.0)
+
         val seen = Int2ObjectOpenHashMap<Pair<Double, Int?>>().apply { defaultReturnValue(Double.MAX_VALUE to null) }
         val queue = IntHeapPriorityQueue(
             10_000,

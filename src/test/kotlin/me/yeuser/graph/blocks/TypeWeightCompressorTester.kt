@@ -1,11 +1,14 @@
 package me.yeuser.graph.blocks
 
 import io.kotest.matchers.shouldBe
+import me.yeuser.graph.blocks.TypeWeightCompressor.checkOverflow
 import me.yeuser.graph.blocks.TypeWeightCompressor.compress
 import me.yeuser.graph.blocks.TypeWeightCompressor.extractType
 import me.yeuser.graph.blocks.TypeWeightCompressor.extractWeight
 import me.yeuser.graph.blocks.TypeWeightCompressor.roundToPrecision
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
@@ -33,4 +36,12 @@ class TypeWeightCompressorTester {
         TestData(256, 254, 1.0),
         TestData(256, 254, 0.0)
     )
+
+    @Test
+    fun `test overflow of TypeWeightCompressor`() {
+        assertThrows<ArithmeticException> {
+            checkOverflow(255,256)
+        }
+        checkOverflow(256,255)
+    }
 }

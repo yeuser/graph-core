@@ -20,7 +20,6 @@ object TypeWeightCompressor {
         ((typeWeight.toInt() and uInt16Upper) % (precision + 1)).toDouble() / precision
 
     fun checkOverflow(precision: Int, typeCount: Int) {
-
         check(typeCount * (precision + 1) <= uInt16Upper) {
             throw ArithmeticException(
                 "Overflow: Given set of `precision and typeCount` creates more than $uInt16Upper distinct states."
